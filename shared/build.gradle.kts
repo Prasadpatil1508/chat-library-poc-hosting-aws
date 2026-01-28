@@ -100,8 +100,7 @@ android {
 
 // ---------- PUBLISHING ----------
 // KMP creates root (shared) + target publications automatically.
-// With publishLibraryVariants("release", "debug"), KMP will create Android variants
-// in the root publication that point to the Android AAR.
+// publishLibraryVariants("release") adds the Android variant to the root publication.
 publishing {
 
     repositories {
