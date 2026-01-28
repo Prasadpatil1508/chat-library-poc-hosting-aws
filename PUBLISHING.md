@@ -13,6 +13,37 @@ This document describes how to publish the library so Android and iOS apps can a
 
 ---
 
+## Where to find the published library
+
+After you publish, here’s where it appears and how consumers use it:
+
+### Android (GitHub Packages)
+
+- **In the GitHub UI:** Your repo → **Packages** (right-hand side, or `https://github.com/orgs/YOUR_ORG/packages` / `https://github.com/YOUR_USER?tab=packages`). The package name is the **repository name** (e.g. `chat-library-poc`).
+- **Maven URL consumers use:**  
+  `https://maven.pkg.github.com/YOUR_GITHUB_OWNER/chat-library-poc`
+- **Dependency coordinates:**  
+  `com.example.chat_poc:shared:VERSION`  
+  (e.g. `com.example.chat_poc:shared:1.0.0`).
+
+### iOS (GitHub Releases)
+
+- **In the GitHub UI:** Your repo → **Releases** → choose a release (e.g. `v1.0.0`) → **Assets**. The XCFramework zip (e.g. `ChatSDK.xcframework.zip`) is listed there.
+- **Direct download URL (for docs or SPM):**  
+  `https://github.com/YOUR_GITHUB_OWNER/chat-library-poc/releases/download/v1.0.0/ChatSDK.xcframework.zip`  
+  (replace `v1.0.0` with the release tag).
+
+### Quick links (replace `YOUR_GITHUB_OWNER`)
+
+| What | URL |
+|------|-----|
+| **Android – Maven repo** | `https://maven.pkg.github.com/YOUR_GITHUB_OWNER/chat-library-poc` |
+| **Android – view package in GitHub** | Repo page → **Packages** (right sidebar), or **Your profile** → **Packages** |
+| **iOS – releases** | `https://github.com/YOUR_GITHUB_OWNER/chat-library-poc/releases` |
+| **iOS – zip for tag v1.0.0** | `https://github.com/YOUR_GITHUB_OWNER/chat-library-poc/releases/download/v1.0.0/ChatSDK.xcframework.zip` |
+
+---
+
 ## 1. Publish Android (GitHub Packages)
 
 ### 1.1 One-time setup
@@ -49,6 +80,19 @@ Optional: set the library version with:
 ```bash
 ./gradlew :shared:publishAllPublicationsToGitHubPackagesRepository -PLIB_VERSION=1.0.0
 ```
+
+**If you get "409 Conflict":** GitHub Packages does not allow overwriting a version. Publish with a new version, e.g. `-PLIB_VERSION=1.0.1`.
+
+**If you see “Incompatible ABI version” or “KLIB resolver: Could not find … atomicfu …”:**
+
+Stale Kotlin/Native metadata is in the build. Clean and publish again:
+
+```bash
+./gradlew clean
+./gradlew :shared:publishAllPublicationsToGitHubPackagesRepository -Pgpr.user=… -Pgpr.token=…
+```
+
+The project uses Kotlin 2.1.0; if you previously built with another Kotlin version, a full clean removes the old klibs.
 
 ### 1.3 Publish via GitHub Actions (on release)
 

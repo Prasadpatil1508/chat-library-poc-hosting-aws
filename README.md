@@ -2,6 +2,20 @@
 
 Kotlin Multiplatform (KMP) library that shows a bottom sheet with simple text when invoked from an Android or Swift (iOS) app.
 
+## Quick start — test locally
+
+**Fastest way to test:** publish to Maven Local and add it to your Android app.
+
+1. **Publish to Maven Local** (from this repo):
+   ```bash
+   ./gradlew :shared:publishToMavenLocal
+   ```
+
+2. **In your Android app:**
+   - Add `mavenLocal()` to repositories
+   - Add `implementation("com.example.chat_poc:shared:1.0.0")`
+   - See [LOCAL_TESTING.md](LOCAL_TESTING.md) for full steps
+
 ## Adding the library from GitHub
 
 - **Android:** add the library from **GitHub Packages** (Maven). See [androidApp/README.md](androidApp/README.md).

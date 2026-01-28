@@ -2,7 +2,61 @@
 
 This folder describes how to add the Chat Library to an Android app and show the bottom sheet when the user taps a button.
 
-## Add the library from GitHub (recommended)
+## Test locally (Maven Local) — quickest way
+
+Publish the library to your local Maven repository (`~/.m2/repository`) and add it to your Android app.
+
+### Step 1: Publish to Maven Local
+
+From the **library repo root** (`chat-library-poc/`):
+
+```bash
+./gradlew :shared:publishToMavenLocal
+```
+
+This publishes all publications (including `shared-android`) to `~/.m2/repository/com/example/chat_poc/shared/...`.
+
+### Step 2: Add to your Android app
+
+In your **Android app project**:
+
+1. **Add Maven Local repository** (in `settings.gradle.kts` or root `build.gradle.kts`):
+
+```kotlin
+dependencyResolutionManagement {
+    repositories {
+        google()
+        mavenCentral()
+        mavenLocal()  // ← Add this
+    }
+}
+```
+
+Or if using repositories in root `build.gradle.kts`:
+
+```kotlin
+repositories {
+    google()
+    mavenCentral()
+    mavenLocal()  // ← Add this
+}
+```
+
+2. **Add the dependency** (in your app module's `build.gradle.kts`):
+
+```kotlin
+dependencies {
+    implementation("com.example.chat_poc:shared:1.0.0")
+}
+```
+
+Use the version from the library's `build.gradle.kts` (default is `1.0.0`, or set via `-PLIB_VERSION=...` when publishing).
+
+3. **Sync and use** — see [Usage](#usage) below.
+
+---
+
+## Add the library from GitHub (for production)
 
 If the library is published to **GitHub Packages** from this repo, add it as a Maven dependency.
 
@@ -88,18 +142,9 @@ include(":shared")
 project(":shared").projectDir = file("../chat-library-poc/shared")
 ```
 
-### Option B: From Maven Local
+### Option B: From Maven Local (see "Test locally" section above)
 
-If you ran `./gradlew :shared:publishToMavenLocal` from the library repo:
-
-```kotlin
-repositories {
-    mavenLocal()
-}
-dependencies {
-    implementation("com.example.chat_poc:shared:1.0.0")
-}
-```
+Already covered in the "Test locally" section at the top of this file.
 
 ## Requirements
 

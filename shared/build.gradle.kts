@@ -1,5 +1,6 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
+import org.gradle.api.publish.maven.tasks.PublishToMavenLocal
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -17,6 +18,8 @@ kotlin {
 
     // ---------- ANDROID ----------
     androidTarget {
+        // Publish release variant to root publication so Android consumers can use com.example.chat_poc:shared:1.0.0
+        publishLibraryVariants("release")
         compilations.all {
             compileTaskProvider.configure {
                 compilerOptions {
@@ -37,10 +40,8 @@ kotlin {
         target.binaries.framework {
             baseName = "ChatSDK"
             isStatic = true
-            xcf.add(this)
-
-            // Better Swift interop
             freeCompilerArgs += "-Xobjc-generics"
+            xcf.add(this)
         }
     }
 
@@ -48,19 +49,14 @@ kotlin {
     sourceSets {
 
         commonMain.dependencies {
-            // Compose Multiplatform (shared UI)
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.ui)
             implementation(compose.material3)
 
-            // Coroutines (async, Flow)
             implementation(libs.kotlinx.coroutines.core)
-
-            // Serialization (JSON envelopes)
             implementation(libs.kotlinx.serialization.json)
 
-            // Ktor core (shared)
             implementation(libs.ktor.client.core)
             implementation(libs.ktor.client.websockets)
             implementation(libs.ktor.client.content.negotiation)
@@ -68,16 +64,12 @@ kotlin {
         }
 
         androidMain.dependencies {
-            // Android HTTP engine
             implementation(libs.ktor.client.okhttp)
-            // Activity + Compose for setContent / ComposeView from library entry point
             implementation(libs.androidx.activity.compose.v1122)
-            // ViewTreeLifecycleOwner lives in lifecycle-runtime
-            implementation("androidx.lifecycle:lifecycle-runtime-viewtree:2.8.6")
+            implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.6")
         }
 
         iosMain.dependencies {
-            // iOS HTTP engine
             implementation(libs.ktor.client.darwin)
         }
 
@@ -99,22 +91,36 @@ android {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
+
+    // 🔴 REQUIRED: publish Android AAR
+    publishing {
+        singleVariant("release")
+    }
 }
 
-// Publishing to GitHub Packages (Android) and Maven Local
+// ---------- PUBLISHING ----------
+// KMP creates root (shared) + target publications automatically.
+// With publishLibraryVariants("release", "debug"), KMP will create Android variants
+// in the root publication that point to the Android AAR.
 publishing {
+
     repositories {
+        // Maven Local for local testing
+        mavenLocal()
+        
+        // GitHub Packages for remote publishing
         maven {
             name = "GitHubPackages"
             url = uri(
                 project.findProperty("GITHUB_PACKAGES_URL")?.toString()
-                    ?: "https://maven.pkg.github.com/YOUR_GITHUB_OWNER/chat-library-poc"
+                    ?: "https://maven.pkg.github.com/PrathameshAdate05/chat-library-poc"
             )
             credentials {
-                username = project.findProperty("gpr.user")?.toString() ?: System.getenv("GITHUB_ACTOR") ?: ""
-                password = project.findProperty("gpr.token")?.toString() ?: System.getenv("GITHUB_TOKEN") ?: ""
+                username = project.findProperty("gpr.user")?.toString()
+                    ?: System.getenv("GITHUB_ACTOR") ?: ""
+                password = project.findProperty("gpr.token")?.toString()
+                    ?: System.getenv("GITHUB_TOKEN") ?: ""
             }
         }
     }
 }
-
