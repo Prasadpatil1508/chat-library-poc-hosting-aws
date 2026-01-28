@@ -2,20 +2,50 @@
 
 This folder describes how to add the Chat Library (ChatSDK XCFramework) to a Swift or SwiftUI app and show the bottom sheet when the user taps a button.
 
-## Build the framework
+## Add the framework from GitHub (recommended)
 
-From the project root:
+If the library repo publishes releases with an XCFramework zip (e.g. from [PUBLISHING.md](../PUBLISHING.md)):
+
+### Option A: Download from a GitHub Release
+
+1. Open the latest release: `https://github.com/YOUR_GITHUB_OWNER/chat-library-poc/releases`
+2. Download the asset `ChatSDK.xcframework.zip` (or the name used in that release).
+3. Unzip it and add `ChatSDK.xcframework` to your app:
+   - In Xcode: app target → **General** → **Frameworks, Libraries, and Embedded Content** → **+** → **Add Other…** → **Add Files…** → select `ChatSDK.xcframework`.
+   - Set **Embed** to **Embed & Sign**.
+
+Replace `YOUR_GITHUB_OWNER` with the GitHub user or org that hosts the repo.
+
+### Option B: Swift Package Manager (if the repo has Package.swift)
+
+If the library repo contains a `Package.swift` that points at the XCFramework zip URL:
+
+1. In Xcode: **File** → **Add Package Dependencies…**
+2. Enter the repo URL: `https://github.com/YOUR_GITHUB_OWNER/chat-library-poc`
+3. Add the `ChatSDK` product to your app target.
+
+See [PUBLISHING.md](../PUBLISHING.md) for how the maintainer publishes the XCFramework and (optional) `Package.swift`.
+
+---
+
+## Build and add the framework locally
+
+When you have the library repo on disk and want to build the framework yourself:
+
+### 1. Build the XCFramework
+
+From the library repo root (on a Mac):
 
 ```bash
 ./gradlew :shared:assembleReleaseXCFramework
 ```
 
-The XCFramework is produced under `shared/build/XCFrameworks/release/` (e.g. `ChatSDK.xcframework`).
+The XCFramework is produced under `shared/build/XCFrameworks/release/` (exact name may vary, e.g. `ChatSDK.xcframework`).
 
-## Add the framework to your Xcode project
+### 2. Add the framework to your Xcode project
 
 1. In Xcode, select your app target → **General** → **Frameworks, Libraries, and Embedded Content**.
-2. Click **+** → **Add Other…** → **Add Files…** and select `ChatSDK.xcframework`.
+2. Click **+** → **Add Other…** → **Add Files…** and select the built `ChatSDK.xcframework`.
 3. Set **Embed** to **Embed & Sign** (or **Do Not Embed** if you link it differently).
 
 ## Requirements

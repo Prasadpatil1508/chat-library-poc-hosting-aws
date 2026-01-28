@@ -2,40 +2,102 @@
 
 This folder describes how to add the Chat Library to an Android app and show the bottom sheet when the user taps a button.
 
-## Add the library to your Android project
+## Add the library from GitHub (recommended)
 
-### Option A: Local dependency (same repo or nearby)
+If the library is published to **GitHub Packages** from this repo, add it as a Maven dependency.
 
-If your app lives in the same repo or you have the `chat-library-poc` project on disk:
+### 1. Add the GitHub Packages repository
 
-1. In your **app** module’s `build.gradle.kts`, add the `:shared` project:
+In your app’s **root** `settings.gradle.kts` (or where `dependencyResolutionManagement` is defined), add the GitHub Packages Maven URL. Replace `YOUR_GITHUB_OWNER` with the GitHub user or org that hosts the repo (e.g. `getitrent`):
+
+```kotlin
+dependencyResolutionManagement {
+    repositories {
+        google()
+        mavenCentral()
+        maven {
+            url = uri("https://maven.pkg.github.com/YOUR_GITHUB_OWNER/chat-library-poc")
+            credentials {
+                username = providers.gradleProperty("gpr.user").getOrElse(System.getenv("GITHUB_ACTOR") ?: "")
+                password = providers.gradleProperty("gpr.token").getOrElse(System.getenv("GITHUB_TOKEN") ?: "")
+            }
+        }
+    }
+}
+```
+
+If you use `build.gradle.kts` at root and repositories are declared there:
+
+```kotlin
+repositories {
+    google()
+    mavenCentral()
+    maven {
+        url = uri("https://maven.pkg.github.com/YOUR_GITHUB_OWNER/chat-library-poc")
+        credentials {
+            username = project.findProperty("gpr.user")?.toString() ?: System.getenv("GITHUB_ACTOR") ?: ""
+            password = project.findProperty("gpr.token")?.toString() ?: System.getenv("GITHUB_TOKEN") ?: ""
+        }
+    }
+}
+```
+
+### 2. Add the dependency
+
+In your **app** module’s `build.gradle.kts`:
+
+```kotlin
+dependencies {
+    implementation("com.example.chat_poc:shared:1.0.0")
+}
+```
+
+Use the version that was published (e.g. `1.0.0` or the tag without `v`, like `v1.0.0` → `1.0.0`).
+
+### 3. Provide credentials
+
+GitHub Packages needs a token with `read:packages` (and `write:packages` for publishing).
+
+**Local development:** add to `~/.gradle/gradle.properties`:
+
+```properties
+gpr.user=YOUR_GITHUB_USERNAME
+gpr.token=YOUR_GITHUB_PERSONAL_ACCESS_TOKEN
+```
+
+**CI:** set env vars `GITHUB_ACTOR` and `GITHUB_TOKEN` (or `gpr.user` / `gpr.token`).
+
+---
+
+## Add the library locally (source or project)
+
+### Option A: From the same repo or a local clone
+
+1. In your **app** module’s `build.gradle.kts`:
 
 ```kotlin
 dependencies {
     implementation(project(":shared"))
-    // If your app is in a different repo, point to the shared path, e.g.:
-    // implementation(project(":shared"))  // when shared is included in settings.gradle.kts
 }
 ```
 
-2. In `settings.gradle.kts` (root of the project that contains your app), include the shared module. For example, if the library is in a sibling directory:
+2. In the project that contains your app, **settings.gradle.kts** must include the shared module. If the library repo is next to your app repo:
 
 ```kotlin
 include(":shared")
-project(":shared").projectDir = file("../path/to/chat-library-poc/shared")
+project(":shared").projectDir = file("../chat-library-poc/shared")
 ```
 
-### Option B: Published artifact
+### Option B: From Maven Local
 
-If the library is published to a Maven repository (e.g. via your CI or local `publishToMavenLocal`):
+If you ran `./gradlew :shared:publishToMavenLocal` from the library repo:
 
 ```kotlin
 repositories {
-    mavenLocal()   // or your Maven URL
+    mavenLocal()
 }
-
 dependencies {
-    implementation("com.example.chat_poc:shared:1.0.0")  // use your group/artifact/version
+    implementation("com.example.chat_poc:shared:1.0.0")
 }
 ```
 

@@ -7,7 +7,11 @@ plugins {
     alias(libs.plugins.kotlinSerialization)
     id("org.jetbrains.kotlin.plugin.compose") version libs.versions.kotlin.get()
     id("org.jetbrains.compose") version "1.6.10"
+    `maven-publish`
 }
+
+group = "com.example.chat_poc"
+version = project.findProperty("LIB_VERSION")?.toString() ?: "1.0.0"
 
 kotlin {
 
@@ -97,7 +101,20 @@ android {
     }
 }
 
-dependencies {
-    implementation("androidx.lifecycle:lifecycle-runtime-viewtree:2.8.6")
+// Publishing to GitHub Packages (Android) and Maven Local
+publishing {
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri(
+                project.findProperty("GITHUB_PACKAGES_URL")?.toString()
+                    ?: "https://maven.pkg.github.com/YOUR_GITHUB_OWNER/chat-library-poc"
+            )
+            credentials {
+                username = project.findProperty("gpr.user")?.toString() ?: System.getenv("GITHUB_ACTOR") ?: ""
+                password = project.findProperty("gpr.token")?.toString() ?: System.getenv("GITHUB_TOKEN") ?: ""
+            }
+        }
+    }
 }
 

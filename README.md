@@ -2,6 +2,13 @@
 
 Kotlin Multiplatform (KMP) library that shows a bottom sheet with simple text when invoked from an Android or Swift (iOS) app.
 
+## Adding the library from GitHub
+
+- **Android:** add the library from **GitHub Packages** (Maven). See [androidApp/README.md](androidApp/README.md).
+- **iOS:** add the **XCFramework** from a **GitHub Release** or via **Swift Package Manager** if the repo has a `Package.swift`. See [iosApp/README.md](iosApp/README.md).
+
+To publish the library to GitHub (Packages + Releases), follow [PUBLISHING.md](PUBLISHING.md).
+
 ## Phase 1
 
 - **Library**: `:shared` – Compose Multiplatform UI (Material3 `ModalBottomSheet`) + platform entry points.
