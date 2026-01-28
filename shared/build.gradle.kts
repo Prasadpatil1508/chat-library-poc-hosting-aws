@@ -5,6 +5,8 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.kotlinSerialization)
+    id("org.jetbrains.kotlin.plugin.compose") version libs.versions.kotlin.get()
+    id("org.jetbrains.compose") version "1.6.10"
 }
 
 kotlin {
@@ -42,27 +44,37 @@ kotlin {
     sourceSets {
 
         commonMain.dependencies {
+            // Compose Multiplatform (shared UI)
+            implementation(compose.runtime)
+            implementation(compose.foundation)
+            implementation(compose.ui)
+            implementation(compose.material3)
+
             // Coroutines (async, Flow)
-            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.1")
+            implementation(libs.kotlinx.coroutines.core)
 
             // Serialization (JSON envelopes)
-            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+            implementation(libs.kotlinx.serialization.json)
 
             // Ktor core (shared)
-            implementation("io.ktor:ktor-client-core:2.3.12")
-            implementation("io.ktor:ktor-client-websockets:2.3.12")
-            implementation("io.ktor:ktor-client-content-negotiation:2.3.12")
-            implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.12")
+            implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.websockets)
+            implementation(libs.ktor.client.content.negotiation)
+            implementation(libs.ktor.serialization.kotlinx.json)
         }
 
         androidMain.dependencies {
             // Android HTTP engine
-            implementation("io.ktor:ktor-client-okhttp:2.3.12")
+            implementation(libs.ktor.client.okhttp)
+            // Activity + Compose for setContent / ComposeView from library entry point
+            implementation(libs.androidx.activity.compose.v1122)
+            // ViewTreeLifecycleOwner lives in lifecycle-runtime
+            implementation("androidx.lifecycle:lifecycle-runtime-viewtree:2.8.6")
         }
 
         iosMain.dependencies {
             // iOS HTTP engine
-            implementation("io.ktor:ktor-client-darwin:2.3.12")
+            implementation(libs.ktor.client.darwin)
         }
 
         commonTest.dependencies {
@@ -84,3 +96,8 @@ android {
         targetCompatibility = JavaVersion.VERSION_1_8
     }
 }
+
+dependencies {
+    implementation("androidx.lifecycle:lifecycle-runtime-viewtree:2.8.6")
+}
+
