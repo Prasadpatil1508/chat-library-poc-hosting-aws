@@ -3,16 +3,18 @@ package com.example.chat_poc.domain
 import com.example.chat_poc.api.StartChatApi
 import com.example.chat_poc.api.KtorStartChatApi
 import com.example.chat_poc.config.ConnectConfig
+import com.example.chat_poc.connect.ConnectChatDetails
 import com.example.chat_poc.util.ChatLibraryLog
 
 /**
- * Use case: fetch start-chat token for AWS Connect (phase 1: API only).
+ * Use case: fetch start-chat token/details for AWS Connect.
  * Depends on [StartChatApi] (default: [KtorStartChatApi]); host can inject a different implementation.
  */
 class FetchConnectTokenUseCase(
     private val api: StartChatApi = KtorStartChatApi()
 ) {
-    suspend operator fun invoke(config: ConnectConfig): Result<String> {
+    /** Returns full chat details (token + contactId + participantId) for [ConnectChatSession.connect]. */
+    suspend operator fun invoke(config: ConnectConfig): Result<ConnectChatDetails> {
         ChatLibraryLog.d("UseCase", "fetchToken: apiGateway=${config.apiGatewayUrl.take(50)}..., instanceId=${config.instanceId}")
         return api.fetchToken(config).mapCatching { response ->
             val token = response.effectiveToken()
@@ -25,10 +27,13 @@ class FetchConnectTokenUseCase(
                 throw IllegalStateException(
                     "Start-chat response had no token. API may use different JSON keys; check logs and StartChatResponse.kt."
                 )
-            } else {
-                ChatLibraryLog.d("UseCase", "fetchToken: got token (length=${token.length})")
-                token
             }
+            ChatLibraryLog.d("UseCase", "fetchToken: got token (length=${token.length}), contactId=${response.contactId != null}, participantId=${response.participantId != null}")
+            ConnectChatDetails(
+                participantToken = token,
+                contactId = response.contactId,
+                participantId = response.participantId,
+            )
         }
     }
 }

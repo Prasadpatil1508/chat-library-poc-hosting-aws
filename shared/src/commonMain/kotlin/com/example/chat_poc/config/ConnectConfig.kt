@@ -9,7 +9,7 @@ package com.example.chat_poc.config
  * @param apiGatewayUrl Base URL of the start-chat API (e.g. from API_GATEWAY env).
  * @param contactFlowId Contact flow ID (e.g. from CONTACT_FLOW_ID env).
  * @param instanceId Connect instance ID (e.g. from INSTANCE_ID env).
- * @param region AWS region (e.g. from REGION env).
+ * @param region AWS region (e.g. from REGION env). Used to call AWS Participant Service (participant-connect.{region}.amazonaws.com) for connect and send.
  */
 data class ConnectConfig(
     val apiGatewayUrl: String,

@@ -218,6 +218,10 @@ import com.example.chat_poc.showBottomSheet
 ChatPoc.showBottomSheet(activity)
 ```
 
+## Markdown rendering (bot messages)
+
+The library renders bot Markdown messages (headings, lists, tables, bold/italic, links) using **com.mikepenz:multiplatform-markdown-renderer** with Material 3, on both Android and iOS (Compose Multiplatform). The shared module exposes `ChatMessage.isMarkdown`; `ChatMessageContent` uses the same markdown renderer when `isMarkdown` is true. No extra setup is required when using the built-in bottom sheet.
+
 ## Phase 1 behavior
 
 - Tapping **Open Chat Library** (or your equivalent button) shows a bottom sheet.

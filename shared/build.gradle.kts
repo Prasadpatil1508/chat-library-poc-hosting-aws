@@ -1,14 +1,15 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompilerOptions
 import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
 import org.gradle.api.publish.maven.tasks.PublishToMavenLocal
 import java.util.Properties
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.androidLibrary)
+    alias(libs.plugins.androidMultiplatformLibrary)
     alias(libs.plugins.kotlinSerialization)
     id("org.jetbrains.kotlin.plugin.compose") version libs.versions.kotlin.get()
-    id("org.jetbrains.compose") version "1.6.10"
+    id("org.jetbrains.compose") version "1.10.0"
     `maven-publish`
 }
 
@@ -50,20 +51,23 @@ object LibraryConnectConfig {
 """.trimIndent())
     }
 }
-// Any task that compiles Kotlin or builds source jars must run after generateConnectConfig
-tasks.matching { it.name.contains("compile") && it.name.contains("Kotlin") }.configureEach { dependsOn(generateConnectConfig) }
+// Any task that compiles Kotlin (including Android-KMP compileAndroidMain) or builds source jars must run after generateConnectConfig
+tasks.matching {
+    it.name.contains("compile") && (it.name.contains("Kotlin") || it.name == "compileAndroidMain")
+}.configureEach { dependsOn(generateConnectConfig) }
 tasks.matching { it.name.endsWith("SourcesJar") || it.name == "sourcesJar" }.configureEach { dependsOn(generateConnectConfig) }
 
 kotlin {
 
-    // ---------- ANDROID ----------
-    androidTarget {
-        // Publish release variant to root publication so Android consumers can use com.example.chat_poc:shared:1.0.0
-        publishLibraryVariants("release")
-        compilations.all {
+    // ---------- ANDROID (Android-KMP library plugin) ----------
+    androidLibrary {
+        namespace = "com.example.chat_poc"
+        compileSdk = 35
+        minSdk = 24
+        compilations.configureEach {
             compileTaskProvider.configure {
                 compilerOptions {
-                    jvmTarget.set(JvmTarget.JVM_1_8)
+                    (this as KotlinJvmCompilerOptions).jvmTarget.set(JvmTarget.JVM_1_8)
                     freeCompilerArgs.add("-Xexpect-actual-classes")
                 }
             }
@@ -106,6 +110,10 @@ kotlin {
             implementation(libs.ktor.client.websockets)
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)
+
+            // mikepenz/multiplatform-markdown-renderer: KMP Markdown for Android + iOS (expect/actual in markdown/)
+            implementation("com.mikepenz:multiplatform-markdown-renderer:0.39.1")
+            implementation("com.mikepenz:multiplatform-markdown-renderer-m3:0.39.1")
         }
 
         androidMain.dependencies {
@@ -124,28 +132,9 @@ kotlin {
     }
 }
 
-android {
-    namespace = "com.example.chat_poc"
-    compileSdk = 35
-
-    defaultConfig {
-        minSdk = 24
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-    }
-
-    // 🔴 REQUIRED: publish Android AAR
-    publishing {
-        singleVariant("release")
-    }
-}
-
 // ---------- PUBLISHING ----------
 // KMP creates root (shared) + target publications automatically.
-// publishLibraryVariants("release") adds the Android variant to the root publication.
+// With Android-KMP plugin, the single Android variant is included in the root publication by default.
 publishing {
 
     repositories {

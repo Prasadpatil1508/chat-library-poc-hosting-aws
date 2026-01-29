@@ -49,9 +49,14 @@ class KtorStartChatApi(
                 return@runCatching null
             }
             val dto = json.decodeFromString<StartChatApiResponseDto>(rawBody)
-            val token = dto.data?.startChatResult?.participantToken
-            val parsed = StartChatResponse(participantTokenCapitalP = token)
-            ChatLibraryLog.d("StartChatApi", "Parsed: token present=${token != null}")
+            val result = dto.data?.startChatResult
+            val token = result?.participantToken
+            val parsed = StartChatResponse(
+                participantTokenCapitalP = token,
+                contactId = result?.contactId,
+                participantId = result?.participantId,
+            )
+            ChatLibraryLog.d("StartChatApi", "Parsed: token present=${token != null}, contactId=${result?.contactId != null}, participantId=${result?.participantId != null}")
             parsed
         }.mapCatching { parsed ->
             parsed ?: throw IllegalStateException("Request returned non-success status (see logs for raw body)")

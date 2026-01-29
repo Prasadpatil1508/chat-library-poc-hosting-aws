@@ -11,7 +11,7 @@ Add these to **this repo’s** `local.properties` (see [local.properties.example
 | `API_GATEWAY` | Full URL of the start-chat API (e.g. `https://xxx.execute-api.region.amazonaws.com/prod/start-chat`). |
 | `CONTACT_FLOW_ID` | Amazon Connect contact flow ID. |
 | `INSTANCE_ID` | Amazon Connect instance ID. |
-| `REGION` | AWS region (e.g. `ca-central-1`). |
+| `REGION` | AWS region (e.g. `ca-central-1`). Used to call AWS Participant Service directly (participant-connect.{region}.amazonaws.com) for connect and send; no separate connection URL needed. |
 
 ## How it works
 
