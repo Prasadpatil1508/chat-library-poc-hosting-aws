@@ -37,6 +37,12 @@ See **androidApp/README.md** for how to add the library to an Android app (depen
 
 See **iosApp/README.md** for how to add the library to an iOS app (build the XCFramework, add it in Xcode, and SwiftUI/UIKit usage).
 
+### Config & callbacks (host ↔ library)
+
+- **Host → library:** Pass [ChatLibraryConfig] (e.g. `authToken`, `displayTitle`, `displayMessages`) when showing the sheet so the library can display custom data or call APIs.
+- **Library → host:** Implement [ChatLibraryCallbacks] (`onActionButtonClicked`, `onDataToHost`) and pass when showing the sheet to handle button clicks and receive data from the library.
+- All config/callback types and UI logic live in **commonMain**; Android and iOS only bridge to the host.
+
 ### Requirements
 
 - **Android**: `ComponentActivity` (e.g. from Activity Compose). The host app does not need to be fully Compose-based.
