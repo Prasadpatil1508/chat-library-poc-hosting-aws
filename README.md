@@ -39,9 +39,10 @@ See **iosApp/README.md** for how to add the library to an iOS app (build the XCF
 
 ### Config & callbacks (host ↔ library)
 
-- **Host → library:** Pass [ChatLibraryConfig] (e.g. `authToken`, `displayTitle`, `displayMessages`) when showing the sheet so the library can display custom data or call APIs.
-- **Library → host:** Implement [ChatLibraryCallbacks] (`onActionButtonClicked`, `onDataToHost`) and pass when showing the sheet to handle button clicks and receive data from the library.
-- All config/callback types and UI logic live in **commonMain**; Android and iOS only bridge to the host.
+- **Host → library:** Pass [ChatLibraryConfig] (e.g. `authToken`, `displayTitle`, `displayMessages`) when showing the sheet. **Connect/start-chat config is inside the library** (from the library’s [local.properties](local.properties) at build time); see [local.properties.example](local.properties.example) and [ENV.md](ENV.md).
+- **Library → host:** Implement [ChatLibraryCallbacks] (`onActionButtonClicked`, `onDataToHost`) to handle button clicks and receive data (e.g. start-chat token or errors).
+- **Phase 1 – start-chat API:** The library reads API_GATEWAY, CONTACT_FLOW_ID, INSTANCE_ID, REGION from **its** `local.properties` and shows a "Fetch Connect token" button; it calls the start-chat API and returns the token via `onDataToHost("token:...")`. Phase 2 will wire the token to AWS Connect SDK.
+- All logic lives in **commonMain** (config, api, model, domain, UI); Android/iOS only provide the HTTP engine and UI host.
 
 ### Requirements
 

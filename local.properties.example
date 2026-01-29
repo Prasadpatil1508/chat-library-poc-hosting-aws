@@ -1,0 +1,8 @@
+## Copy to local.properties and fill in. Do not commit local.properties.
+## Your local.properties already has sdk.dir=...; add the lines below.
+
+# AWS Connect / start-chat API (pass these to the library as ConnectConfig)
+API_GATEWAY=https://your-api.execute-api.region.amazonaws.com/prod/start-chat
+CONTACT_FLOW_ID=your-contact-flow-id
+INSTANCE_ID=your-connect-instance-id
+REGION=ca-central-1

@@ -1,5 +1,7 @@
 package com.example.chat_poc
 
+import com.example.chat_poc.config.LibraryConnectConfig
+import com.example.chat_poc.util.ChatLibraryLog
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,8 +15,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 
 /**
  * Shared bottom sheet content (commonMain).
@@ -29,8 +33,15 @@ fun ChatBottomSheetContent(
     callbacks: ChatLibraryCallbacks?,
     onDismiss: () -> Unit,
 ) {
+    val scope = rememberCoroutineScope()
+    ChatLibraryLog.d("BottomSheet", "Content composing: title=${config.displayTitle}, messages=${config.displayMessages.size}, callbacks=${callbacks != null}")
+    val hasConnectConfig = LibraryConnectConfig.get()?.isValid() == true
+    ChatLibraryLog.d("BottomSheet", "Connect config valid=$hasConnectConfig (Fetch token button ${if (hasConnectConfig) "shown" else "hidden"})")
     ModalBottomSheet(
-        onDismissRequest = onDismiss,
+        onDismissRequest = {
+            ChatLibraryLog.d("BottomSheet", "Dismiss requested")
+            onDismiss()
+        },
     ) {
         Column(
             modifier = Modifier
@@ -67,10 +78,32 @@ fun ChatBottomSheetContent(
                 )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            if (hasConnectConfig) {
+                Button(
+                    onClick = {
+                        ChatLibraryLog.d("BottomSheet", "Fetch Connect token tapped")
+                        scope.launch {
+                            fetchConnectToken()
+                                .onSuccess { token ->
+                                    ChatLibraryLog.d("BottomSheet", "Fetch token success, notifying host")
+                                    callbacks?.onDataToHost("token:$token")
+                                }
+                                .onFailure { e ->
+                                    ChatLibraryLog.e("BottomSheet", "Fetch token failed: ${e.message}")
+                                    callbacks?.onDataToHost("error:${e.message}")
+                                }
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Fetch Connect token (phase 1 API)")
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+            }
 
             Button(
                 onClick = {
+                    ChatLibraryLog.d("BottomSheet", "Action (notify host) tapped")
                     callbacks?.onActionButtonClicked()
                     callbacks?.onDataToHost("action_button_clicked")
                 },

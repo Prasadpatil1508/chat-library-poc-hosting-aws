@@ -2,6 +2,7 @@ package com.example.chat_poc
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.window.ComposeUIViewController
+import com.example.chat_poc.util.ChatLibraryLog
 import platform.UIKit.UIViewController
 
 private var bottomSheetDismissHandler: (() -> Unit)? = null
@@ -11,6 +12,7 @@ private var bottomSheetDismissHandler: (() -> Unit)? = null
  * the host can call vc.dismiss(animated: true).
  */
 fun setBottomSheetDismissHandler(handler: () -> Unit) {
+    ChatLibraryLog.d("iOS", "setBottomSheetDismissHandler set")
     bottomSheetDismissHandler = handler
 }
 
@@ -22,8 +24,9 @@ fun setBottomSheetDismissHandler(handler: () -> Unit) {
 fun createBottomSheetViewController(
     config: ChatLibraryConfig = ChatLibraryConfig(),
     callbacks: ChatLibraryCallbacks? = null
-): UIViewController =
-    ComposeUIViewController {
+): UIViewController {
+    ChatLibraryLog.d("iOS", "createBottomSheetViewController: title=${config.displayTitle}, messages=${config.displayMessages.size}, hasCallbacks=${callbacks != null}")
+    return ComposeUIViewController {
         MaterialTheme {
             ChatBottomSheetContent(
                 config = config,
@@ -32,6 +35,7 @@ fun createBottomSheetViewController(
             )
         }
     }
+}
 
 /**
  * Swift-friendly overload: pass primitives and closures. Builds [ChatLibraryConfig]

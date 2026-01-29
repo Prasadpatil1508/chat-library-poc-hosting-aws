@@ -3,9 +3,8 @@ package com.example.chat_poc
 /**
  * Input configuration for the Chat Library (host → library).
  *
- * Pass from the host app when showing the bottom sheet (e.g. auth token for API calls,
- * title and messages to display). All properties have defaults so the host can pass
- * only what it needs.
+ * Pass from the host app when showing the bottom sheet (e.g. auth token, title, messages).
+ * Connect/start-chat API config is owned by the library (from local.properties at build time).
  *
  * @param authToken Optional token for library API calls (e.g. Bearer token).
  * @param displayTitle Title shown at the top of the bottom sheet.
