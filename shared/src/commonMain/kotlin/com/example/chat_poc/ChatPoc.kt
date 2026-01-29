@@ -1,12 +1,15 @@
 package com.example.chat_poc
 
 /**
- * Phase 1 API: Entry point for the Chat Library.
+ * Entry point for the Chat Library (commonMain).
  *
- * - **Android**: Call [showBottomSheet] with a [androidx.activity.ComponentActivity]
- *   to show the bottom sheet with simple text.
+ * - **Android**: Call [showBottomSheet] with a [androidx.activity.ComponentActivity],
+ *   optional [ChatLibraryConfig], and optional [ChatLibraryCallbacks].
  *
- * - **iOS**: Call [createBottomSheetViewController] to get a UIViewController
- *   that shows the bottom sheet. Present it modally (e.g. as a sheet) from your Swift app.
+ * - **iOS**: Call [createBottomSheetViewController] (from platform bridge) with optional
+ *   config and callbacks; present the returned UIViewController modally.
+ *
+ * Config: pass data into the library (e.g. auth token, title, messages).
+ * Callbacks: override in the host to handle button clicks and data from the library.
  */
 object ChatPoc

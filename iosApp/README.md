@@ -109,6 +109,8 @@ class ViewController: UIViewController {
 
 With SwiftUI `.sheet`, the system handles dismiss when the user swipes; you don't need to call `setBottomSheetDismissHandler` unless you want the Compose sheet's internal dismiss to also close the presented VC.
 
+The Compose chat UI (bottom sheet) renders Markdown on iOS using the same shared markdown renderer as Android.
+
 ## Phase 1 behavior
 
 - Tapping **Open Chat Library** (or your equivalent button) presents a bottom sheet.

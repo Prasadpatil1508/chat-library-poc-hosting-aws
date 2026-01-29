@@ -5,29 +5,32 @@ import androidx.activity.ComponentActivity
 import androidx.activity.ComponentDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.platform.ComposeView
+import com.example.chat_poc.util.ChatLibraryLog
 
 /**
- * Production-safe chat dialog.
- * Lifecycle, ViewModelStore, and SavedState are wired automatically.
+ * Android bridge: shows the chat bottom sheet with [config] and [callbacks].
+ * Logic lives in commonMain; this only wires Compose to the Activity.
  */
 class ChatBottomSheetDialog(
     context: Context,
+    private val config: ChatLibraryConfig,
+    private val callbacks: ChatLibraryCallbacks?,
     private val onDismiss: () -> Unit
 ) : ComponentDialog(context) {
 
     override fun onStart() {
         super.onStart()
-
-        // Full-screen style (same behavior you had before)
+        ChatLibraryLog.d("Android", "Bottom sheet dialog onStart: title=${config.displayTitle}, hasCallbacks=${callbacks != null}")
         window?.setLayout(
             android.view.ViewGroup.LayoutParams.MATCH_PARENT,
             android.view.ViewGroup.LayoutParams.MATCH_PARENT
         )
-
         val composeView = ComposeView(context).apply {
             setContent {
                 MaterialTheme {
                     ChatBottomSheetContent(
+                        config = config,
+                        callbacks = callbacks,
                         onDismiss = {
                             dismiss()
                             onDismiss()
@@ -36,18 +39,24 @@ class ChatBottomSheetDialog(
                 }
             }
         }
-
         setContentView(composeView)
     }
 }
 
 /**
- * Shows the Chat Library bottom sheet with simple text.
- * Call this when the user taps your button. Requires [ComponentActivity] (e.g. from Activity Compose).
+ * Shows the Chat Library bottom sheet. Pass [config] to send data into the library,
+ * [callbacks] to receive button clicks and data from the library.
  */
-fun ChatPoc.showBottomSheet(activity: ComponentActivity) {
+fun ChatPoc.showBottomSheet(
+    activity: ComponentActivity,
+    config: ChatLibraryConfig = ChatLibraryConfig(),
+    callbacks: ChatLibraryCallbacks? = null
+) {
+    ChatLibraryLog.d("Android", "showBottomSheet called: title=${config.displayTitle}, messages=${config.displayMessages.size}")
     ChatBottomSheetDialog(
         context = activity,
+        config = config,
+        callbacks = callbacks,
         onDismiss = {}
     ).show()
 }

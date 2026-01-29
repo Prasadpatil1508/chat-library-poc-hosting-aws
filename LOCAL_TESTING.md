@@ -5,6 +5,17 @@ Android and iOS setups are independent; doing one does not affect the other.
 
 ---
 
+## Consumer requirements (Android / host app)
+
+The library is built with **Kotlin 2.3.0** and uses **Compose** (including the mikepenz markdown renderer, which targets Compose 1.10). Your **host app** must align:
+
+1. **Kotlin 2.3.0** – Set `kotlin = "2.3.0"` in your version catalog (or equivalent). Otherwise you may see "source must not be null" or "Module was compiled with an incompatible version of Kotlin."
+2. **Compose BOM 2025.01.00 or newer** – Use `compose-bom:2025.01.00` (or a later BOM that includes Compose 1.10 runtime). Older BOMs (e.g. 2024.09.00) ship an older Compose runtime and can cause `NoSuchMethodError` (e.g. `Updater.init-impl`) when the library’s markdown composables run.
+
+Sync Gradle and rebuild after changing versions.
+
+---
+
 ## Android
 
 ### 1. Publish to Maven Local

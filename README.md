@@ -37,6 +37,14 @@ See **androidApp/README.md** for how to add the library to an Android app (depen
 
 See **iosApp/README.md** for how to add the library to an iOS app (build the XCFramework, add it in Xcode, and SwiftUI/UIKit usage).
 
+### Config & callbacks (host ↔ library)
+
+- **Host → library:** Pass [ChatLibraryConfig] (e.g. `authToken`, `displayTitle`, `displayMessages`) when showing the sheet. **Connect/start-chat config is inside the library** (from the library’s [local.properties](local.properties) at build time); see [local.properties.example](local.properties.example) and [ENV.md](ENV.md).
+- **Library → host:** Implement [ChatLibraryCallbacks] (`onActionButtonClicked`, `onDataToHost`) to handle button clicks and receive data (e.g. start-chat token or errors).
+- **Phase 1 – start-chat API:** The library reads API_GATEWAY, CONTACT_FLOW_ID, INSTANCE_ID, REGION from **its** `local.properties` and shows a "Fetch Connect token" button; it calls the start-chat API and returns the token via `onDataToHost("token:...")`.
+- **Phase 2 – AWS Connect chat:** The library uses **ContactId, ParticipantId, ParticipantToken** from the start-chat response and **REGION** from config to call the **AWS Connect Participant Service** directly (no separate connection URL). One tap on "Fetch Connect token & connect to chat" fetches the token and connects to AWS Connect; see [ENV.md](ENV.md) and [amazon-connect-chat-ui-examples/mobileChatExamples](https://github.com/amazon-connect/amazon-connect-chat-ui-examples/tree/master/mobileChatExamples).
+- All logic lives in **commonMain** (config, api, model, domain, connect, UI); Android/iOS only provide the HTTP/WebSocket engine and UI host.
+
 ### Requirements
 
 - **Android**: `ComponentActivity` (e.g. from Activity Compose). The host app does not need to be fully Compose-based.
@@ -47,6 +55,13 @@ See **iosApp/README.md** for how to add the library to an iOS app (build the XCF
 - `shared/` – KMP library (common + android + ios).
 - `androidApp/README.md` – Instructions for adding the library to an Android app.
 - `iosApp/README.md` – Instructions for adding the library to an iOS app.
+
+## Phase 2 – Connect chat (SOLID, KMP)
+
+- **Abstractions:** [ConnectChatDetails] (participantToken, contactId, participantId), [ConnectChatSession] (connect, disconnect, sendMessage, onConnectionEstablished, onMessageReceived, etc.). Follows the [Amazon Connect mobile examples](https://github.com/amazon-connect/amazon-connect-chat-ui-examples/tree/master/mobileChatExamples).
+- **Direct AWS:** [AwsParticipantConnectionApi] calls **CreateParticipantConnection** at `participant-connect.{region}.amazonaws.com/participant/connection` with header `X-Amz-Bearer: participantToken` (no SigV4). [ConnectSessionKtor] uses that plus the AWS **SendMessage** endpoint (`/participant/message` with connection token) and Ktor WebSocket for receiving.
+- **Public API:** `fetchConnectChatDetails()` → [ConnectChatDetails]; `createConnectChatSession(config)` or `createConnectChatSessionOrNull()` → [ConnectChatSession]; then `session.connect(details)`.
+- **UI:** "Fetch Connect token & connect to chat" fetches token and connects when config (API_GATEWAY, REGION, etc.) is set; after connect, messages list and send box.
 
 ## Tech stack
 
