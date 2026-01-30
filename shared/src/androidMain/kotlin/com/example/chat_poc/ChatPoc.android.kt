@@ -3,8 +3,11 @@ package com.example.chat_poc
 import android.content.Context
 import androidx.activity.ComponentActivity
 import androidx.activity.ComponentDialog
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.ui.platform.ComposeView
+import com.example.chat_poc.storage.ChatSessionStorage
+import com.example.chat_poc.ui.theme.ChatPocTheme
+import com.example.chat_poc.ui.views.ChatBottomSheetContent
 import com.example.chat_poc.util.ChatLibraryLog
 import com.example.chat_poc.util.UrlOpener
 
@@ -22,6 +25,7 @@ class ChatBottomSheetDialog(
     override fun onStart() {
         super.onStart()
         UrlOpener.setContext(context)
+        ChatSessionStorage.setContext(context)
         ChatLibraryLog.d("Android", "Bottom sheet dialog onStart: title=${config.displayTitle}, hasCallbacks=${callbacks != null}")
         window?.setLayout(
             android.view.ViewGroup.LayoutParams.MATCH_PARENT,
@@ -29,7 +33,7 @@ class ChatBottomSheetDialog(
         )
         val composeView = ComposeView(context).apply {
             setContent {
-                MaterialTheme {
+                ChatPocTheme(darkTheme = isSystemInDarkTheme()) {
                     ChatBottomSheetContent(
                         config = config,
                         callbacks = callbacks,
@@ -46,6 +50,7 @@ class ChatBottomSheetDialog(
 
     override fun onStop() {
         UrlOpener.setContext(null)
+        ChatSessionStorage.setContext(null)
         super.onStop()
     }
 }

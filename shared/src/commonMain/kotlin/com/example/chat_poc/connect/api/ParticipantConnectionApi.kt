@@ -1,4 +1,6 @@
-package com.example.chat_poc.connect
+package com.example.chat_poc.connect.api
+
+import com.example.chat_poc.connect.model.ConnectionDetails
 
 /**
  * Abstraction for participant connection (AWS CreateParticipantConnection or proxy).

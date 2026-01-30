@@ -1,4 +1,4 @@
-package com.example.chat_poc.connect
+package com.example.chat_poc.connect.model
 
 /**
  * Domain model for parsed WebSocket messages. Platform-neutral; no AWS or platform APIs.

@@ -1,7 +1,8 @@
 package com.example.chat_poc
 
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.window.ComposeUIViewController
+import com.example.chat_poc.ui.theme.ChatPocTheme
+import com.example.chat_poc.ui.views.ChatBottomSheetContent
 import com.example.chat_poc.util.ChatLibraryLog
 import platform.UIKit.UIViewController
 
@@ -27,7 +28,7 @@ fun createBottomSheetViewController(
 ): UIViewController {
     ChatLibraryLog.d("iOS", "createBottomSheetViewController: title=${config.displayTitle}, messages=${config.displayMessages.size}, hasCallbacks=${callbacks != null}")
     return ComposeUIViewController {
-        MaterialTheme {
+        ChatPocTheme(darkTheme = false) {
             ChatBottomSheetContent(
                 config = config,
                 callbacks = callbacks,

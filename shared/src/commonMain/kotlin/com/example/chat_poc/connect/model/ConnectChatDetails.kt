@@ -1,8 +1,8 @@
-package com.example.chat_poc.connect
+package com.example.chat_poc.connect.model
 
 /**
  * Details from StartChatContact used to connect to AWS Connect chat.
- * Pass to [ConnectChatSession.connect] (see [mobileChatExamples](https://github.com/amazon-connect/amazon-connect-chat-ui-examples/tree/master/mobileChatExamples)).
+ * Pass to [ConnectChatSession.connect].
  *
  * @param participantToken Required; from start-chat API.
  * @param contactId Optional; from start-chat response (ContactId).

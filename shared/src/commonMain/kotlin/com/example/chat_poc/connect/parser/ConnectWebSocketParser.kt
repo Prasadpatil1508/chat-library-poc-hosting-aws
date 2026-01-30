@@ -1,5 +1,9 @@
-package com.example.chat_poc.connect
+package com.example.chat_poc.connect.parser
 
+import com.example.chat_poc.connect.model.BotMessage
+import com.example.chat_poc.connect.model.ChatItem
+import com.example.chat_poc.connect.model.FlightStatusPayload
+import com.example.chat_poc.connect.model.Sender
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive

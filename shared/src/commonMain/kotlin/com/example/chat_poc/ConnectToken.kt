@@ -2,7 +2,7 @@ package com.example.chat_poc
 
 import com.example.chat_poc.config.ConnectConfig
 import com.example.chat_poc.config.LibraryConnectConfig
-import com.example.chat_poc.connect.ConnectChatDetails
+import com.example.chat_poc.connect.model.ConnectChatDetails
 import com.example.chat_poc.domain.FetchConnectTokenUseCase
 import com.example.chat_poc.util.ChatLibraryLog
 
@@ -21,7 +21,7 @@ suspend fun fetchConnectToken(): Result<String> {
 }
 
 /**
- * Fetches full chat details (token + contactId + participantId) for [connect.connectChat].
+ * Fetches full chat details (token + contactId + participantId) for [ConnectChatSession.connect].
  *
  * @return [Result] with [ConnectChatDetails] on success.
  */
