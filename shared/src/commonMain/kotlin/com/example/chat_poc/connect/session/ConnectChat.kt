@@ -1,4 +1,4 @@
-package com.example.chat_poc.connect
+package com.example.chat_poc.connect.session
 
 import com.example.chat_poc.config.ConnectConfig
 import com.example.chat_poc.config.LibraryConnectConfig
@@ -6,10 +6,9 @@ import com.example.chat_poc.util.ChatLibraryLog
 
 /**
  * Creates a [ConnectChatSession] for AWS Connect chat.
- * Uses [ConnectChatDetails] (ContactId, ParticipantId, ParticipantToken) from start-chat and
- * [ConnectConfig.region] to call AWS Participant Service directly; no separate connection URL.
+ * Uses [ConnectChatDetails] from start-chat and [ConnectConfig.region].
  *
- * @param config Connect config with valid region (from local.properties: API_GATEWAY, REGION, etc.).
+ * @param config Connect config with valid region.
  * @return Session instance; call [ConnectChatSession.connect] with [ConnectChatDetails] from [fetchConnectChatDetails].
  */
 fun createConnectChatSession(config: ConnectConfig): ConnectChatSession {

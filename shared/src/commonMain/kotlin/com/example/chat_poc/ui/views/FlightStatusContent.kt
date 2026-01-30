@@ -1,4 +1,4 @@
-package com.example.chat_poc
+package com.example.chat_poc.ui.views
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -15,10 +15,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.chat_poc.connect.FlightAction
-import com.example.chat_poc.connect.FlightLeg
-import com.example.chat_poc.connect.FlightStatusPayload
-import com.example.chat_poc.connect.FlightStatus as FlightStatusModel
+import com.example.chat_poc.connect.model.FlightLeg
+import com.example.chat_poc.connect.model.FlightStatusPayload
+import com.example.chat_poc.connect.model.FlightStatus as FlightStatusModel
 
 /**
  * Renders a flight status message (messageType == "FLIGHT_STATUS") as a custom card widget.

@@ -1,7 +1,16 @@
-package com.example.chat_poc.connect
+package com.example.chat_poc.connect.session
 
 import com.example.chat_poc.api.createHttpClient
 import com.example.chat_poc.config.ConnectConfig
+import com.example.chat_poc.connect.api.AwsParticipantConnectionApi
+import com.example.chat_poc.connect.api.ParticipantConnectionApi
+import com.example.chat_poc.connect.model.ChatItem
+import com.example.chat_poc.connect.model.ChatMessage
+import com.example.chat_poc.connect.model.ConnectChatDetails
+import com.example.chat_poc.connect.model.MessageDirection
+import com.example.chat_poc.connect.model.Sender
+import com.example.chat_poc.connect.parser.DefaultJson
+import com.example.chat_poc.connect.parser.parseWebSocketMessage
 import com.example.chat_poc.util.ChatLibraryLog
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -28,12 +37,6 @@ import kotlinx.serialization.json.put
 
 /**
  * Shared [ConnectChatSession] implementation using AWS Connect Participant Service directly.
- * Uses ContactId, ParticipantId, ParticipantToken from start-chat; no separate connection URL.
- *
- * - CreateParticipantConnection: POST participant-connect.{region}.amazonaws.com/participant/connection
- *   with X-Amz-Bearer: participantToken, body { "Type": ["WEBSOCKET"] } → WebSocket URL + connection token.
- * - SendMessage: POST participant-connect.{region}.amazonaws.com/participant/message
- *   with X-Amz-Bearer: connectionToken, body { "Content", "ContentType": "text/plain" }.
  */
 class ConnectSessionKtor(
     private val config: ConnectConfig,
@@ -84,7 +87,6 @@ class ConnectSessionKtor(
                 for (frame in incoming) {
                     if (frame is Frame.Text) {
                         val text = frame.readText()
-                        // Dump raw WebSocket payload for debugging (truncate if very long)
                         val dump = if (text.length <= 1500) text else "${text.take(1500)}...[${text.length} chars total]"
                         ChatLibraryLog.d("ConnectSessionKtor", "WebSocket raw: $dump")
                         parseAndEmitMessage(text)

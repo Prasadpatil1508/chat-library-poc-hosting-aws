@@ -1,4 +1,4 @@
-package com.example.chat_poc.connect
+package com.example.chat_poc.connect.model
 
 /**
  * Result of CreateParticipantConnection (or backend proxy).

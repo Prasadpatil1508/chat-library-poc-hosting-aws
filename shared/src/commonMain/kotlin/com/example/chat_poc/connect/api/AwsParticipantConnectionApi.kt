@@ -1,5 +1,6 @@
-package com.example.chat_poc.connect
+package com.example.chat_poc.connect.api
 
+import com.example.chat_poc.connect.model.ConnectionDetails
 import com.example.chat_poc.util.ChatLibraryLog
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -15,13 +16,11 @@ import kotlinx.serialization.json.Json
 
 /**
  * Calls AWS Connect Participant Service CreateParticipantConnection directly.
- * Uses participant token (from start-chat) and region; no SigV4 (Participant Service does not use it).
+ * Uses participant token (from start-chat) and region.
  *
  * Request: POST https://participant-connect.{region}.amazonaws.com/participant/connection
  * Header: X-Amz-Bearer: {participantToken}
- * Body: { "Type": ["WEBSOCKET", "CONNECTION_CREDENTIALS"] } — both needed so response includes ConnectionToken for SendMessage.
- *
- * Response: ConnectionCredentials.ConnectionToken, Websocket.Url
+ * Body: { "Type": ["WEBSOCKET", "CONNECTION_CREDENTIALS"] }
  */
 class AwsParticipantConnectionApi(
     private val client: HttpClient,

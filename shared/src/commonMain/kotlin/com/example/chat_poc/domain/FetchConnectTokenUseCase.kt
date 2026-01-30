@@ -3,7 +3,7 @@ package com.example.chat_poc.domain
 import com.example.chat_poc.api.StartChatApi
 import com.example.chat_poc.api.KtorStartChatApi
 import com.example.chat_poc.config.ConnectConfig
-import com.example.chat_poc.connect.ConnectChatDetails
+import com.example.chat_poc.connect.model.ConnectChatDetails
 import com.example.chat_poc.util.ChatLibraryLog
 
 /**
