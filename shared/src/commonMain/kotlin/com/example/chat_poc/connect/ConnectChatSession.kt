@@ -42,6 +42,7 @@ interface ConnectChatSession {
  * Simple message model for library callbacks (avoids leaking SDK-specific types into commonMain).
  * When [isMarkdown] is true, platform UI should render [text] with a Markdown renderer.
  * When [quickReplies] is non-null, UI should show [text] as title and option buttons; tapping an option sends [QuickReply.value] to the server.
+ * When [flightStatusPayload] is non-null, UI should render the flight status with a custom flight-status widget.
  */
 data class ChatMessage(
     val id: String,
@@ -52,6 +53,7 @@ data class ChatMessage(
     val direction: MessageDirection = MessageDirection.COMMON,
     val isMarkdown: Boolean = false,
     val quickReplies: List<QuickReply>? = null,
+    val flightStatusPayload: FlightStatusPayload? = null,
 )
 
 enum class MessageDirection { INCOMING, OUTGOING, COMMON }

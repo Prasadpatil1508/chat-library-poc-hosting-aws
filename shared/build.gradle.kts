@@ -110,16 +110,15 @@ kotlin {
             implementation(libs.ktor.client.websockets)
             implementation(libs.ktor.client.content.negotiation)
             implementation(libs.ktor.serialization.kotlinx.json)
-
-            // mikepenz/multiplatform-markdown-renderer: KMP Markdown for Android + iOS (expect/actual in markdown/)
-            implementation("com.mikepenz:multiplatform-markdown-renderer:0.39.1")
-            implementation("com.mikepenz:multiplatform-markdown-renderer-m3:0.39.1")
         }
 
         androidMain.dependencies {
             implementation(libs.ktor.client.okhttp)
             implementation(libs.androidx.activity.compose.v1122)
             implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.6")
+            // Markwon: native Android markdown (TextView-based, tables supported)
+            implementation("io.noties.markwon:core:4.6.2")
+            implementation("io.noties.markwon:ext-tables:4.6.2")
         }
 
         iosMain.dependencies {

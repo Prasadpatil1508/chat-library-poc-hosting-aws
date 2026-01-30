@@ -90,6 +90,25 @@ class MainActivity : ComponentActivity() {
 
 ### 4. Troubleshooting (Android)
 
+**"Some Kotlin runtime libraries has an unsupported binary format":**
+- This happens when the **host app** (or a transitive dependency) uses an older Kotlin runtime than the library (the library is built with **Kotlin 2.3.0**).
+- **Fix 1:** Ensure the host’s version catalog has `kotlin = "2.3.0"` and all Kotlin plugins use it. Do **not** use “Downgrade all Kotlin runtime libraries” — that would break the library.
+- **Fix 2 (if the error persists):** Force Kotlin 2.3.0 everywhere. In the host app’s **root** `build.gradle.kts` (the one next to `settings.gradle.kts`, not inside `app/`), add:
+  ```kotlin
+  subprojects {
+      configurations.all {
+          resolutionStrategy {
+              force(
+                  "org.jetbrains.kotlin:kotlin-stdlib:2.3.0",
+                  "org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.3.0",
+                  "org.jetbrains.kotlin:kotlin-stdlib-common:2.3.0"
+              )
+          }
+      }
+  }
+  ```
+- Sync Gradle, **Build → Clean Project**, then **Build → Rebuild Project**. If the IDE still shows the error, try **File → Invalidate Caches / Restart**.
+
 **"Could not find com.example.chat_poc:shared:1.0.0":**
 - Make sure you ran `publishToMavenLocal` from the library repo
 - Check the version matches (library's `build.gradle.kts` default or `-PLIB_VERSION`)
@@ -106,6 +125,33 @@ class MainActivity : ComponentActivity() {
 **After updating the library:**
 - Re-run `publishToMavenLocal` in the library repo
 - In your app: **File → Sync Project with Gradle Files**
+
+**Clear caches so the host uses the latest library:**
+1. **Host app:** **Build → Clean Project**, then **Build → Rebuild Project**.
+2. **Refresh Gradle dependencies:** **File → Sync Project with Gradle Files**, or in terminal (from host app root): `./gradlew --refresh-dependencies`.
+3. **Force Gradle to re-resolve the library:** In terminal (from host app root): `./gradlew clean dependencies --refresh-dependencies`.
+4. **Android Studio caches:** **File → Invalidate Caches…** → check **Clear file system cache and Local History** (and **Clear downloaded shared indexes** if you want) → **Invalidate and Restart**.
+5. **If using Maven Local:** After republishing the library, you can delete the cached copy so the host must re-fetch: remove `~/.m2/repository/com/example/chat_poc/` (or only the `shared/` / `shared-android/` subfolders for the version you use), then sync/rebuild the host.
+
+**"AAPT2 Daemon startup failed" / "Failed to exec spawn helper" (host app):**
+- The `aapt2` binary in the Gradle cache can't be executed. On macOS this is often **Gatekeeper quarantine** or a **corrupted/wrong-architecture** cached binary.
+- **Important:** Close **Android Studio** and stop the Gradle daemon before clearing the cache, or you'll get "Operation not permitted". In a terminal run: `./gradlew --stop` (from any Gradle project or the host app root), then quit Android Studio.
+- **Fix 1 (remove quarantine):** In a terminal run:  
+  `xattr -cr ~/.gradle/caches/`  
+  Then reopen the host app, **Build → Clean Project**, and run the app again.
+- **Fix 2 (force fresh AAPT2):** Delete the transforms cache so Gradle re-downloads AAPT2:  
+  `rm -rf ~/.gradle/caches/8.11.1/transforms`  
+  (If your Gradle version is different, use that number instead of `8.11.1` — check the path in the error.) Then open the host app and run the build again.
+- **Fix 3:** If you get "Operation not permitted" when deleting, make sure Android Studio is fully quit and run `./gradlew --stop`; on macOS you may need to run the `rm` command in **Terminal.app** (not from an IDE) so it has permission to modify the cache.
+- **Fix 4:** Ensure the host app uses an AGP/Android SDK that ships an AAPT2 for your Mac (e.g. Apple Silicon). AGP 8.10+ should be fine; if the problem persists, try updating the Android SDK Build-Tools in SDK Manager.
+
+**"Library compiled with newer Kotlin/Native compiler" (e.g. ScreenTime | ios_simulator_arm64):**
+- The IDE is using an older Kotlin/Native plugin that can't read the 2.3.0 platform klibs in `~/.konan/kotlin-native-prebuilt-macos-aarch64-2.3.0/`.
+- **Do not** downgrade the project to Kotlin 2.0.21 unless you use the "Last resort" option below — the library uses Kotlin 2.3.0 and downgrading would break the build and the host app.
+- **Fix 1 (confirm it's IDE-only):** From the **library** repo run: `./gradlew :shared:assembleRelease :shared:assembleReleaseXCFramework`. If that succeeds, the project is fine; the error is only the IDE not being able to read the klibs.
+- **Fix 2:** Update **Android Studio** and **Kotlin** plugin (Settings → Plugins → Kotlin → Update). Then **File → Invalidate Caches / Restart**. After a **new** Android Studio install, also try: close the project, delete the project's `.idea` folder and `.gradle` folder (inside the library repo), then **File → Open** the project again so the IDE re-imports with the new Kotlin support.
+- **Fix 3:** Dismiss the notification (e.g. "Don't show again" or close it). You can keep working: run and build from Gradle or the Run button; only the IDE's analysis of the Native klibs is limited.
+- **Last resort (IDE must read klibs):** If you must get rid of the IDE error and are okay downgrading the **entire** library and **host** to Kotlin 2.0.21: in this repo set `kotlin = "2.0.21"` in `gradle/libs.versions.toml`, update the Compose compiler/Kotlin plugin references, then run `./gradlew clean :shared:publishToMavenLocal`. In the host app set Kotlin to 2.0.21 and re-sync. You will lose 2.3.0 features and must keep library and host on the same Kotlin version.
 
 ---
 
