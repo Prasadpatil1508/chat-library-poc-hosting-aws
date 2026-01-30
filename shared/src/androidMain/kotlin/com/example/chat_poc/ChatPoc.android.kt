@@ -6,6 +6,7 @@ import androidx.activity.ComponentDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.platform.ComposeView
 import com.example.chat_poc.util.ChatLibraryLog
+import com.example.chat_poc.util.UrlOpener
 
 /**
  * Android bridge: shows the chat bottom sheet with [config] and [callbacks].
@@ -20,6 +21,7 @@ class ChatBottomSheetDialog(
 
     override fun onStart() {
         super.onStart()
+        UrlOpener.setContext(context)
         ChatLibraryLog.d("Android", "Bottom sheet dialog onStart: title=${config.displayTitle}, hasCallbacks=${callbacks != null}")
         window?.setLayout(
             android.view.ViewGroup.LayoutParams.MATCH_PARENT,
@@ -40,6 +42,11 @@ class ChatBottomSheetDialog(
             }
         }
         setContentView(composeView)
+    }
+
+    override fun onStop() {
+        UrlOpener.setContext(null)
+        super.onStop()
     }
 }
 

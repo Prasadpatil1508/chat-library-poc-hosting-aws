@@ -142,6 +142,15 @@ class ConnectSessionKtor(
             direction = MessageDirection.INCOMING,
             quickReplies = item.options,
         )
+        is ChatItem.FlightStatus -> ChatMessage(
+            id = "",
+            text = "",
+            participantId = null,
+            displayName = "AI Assistant",
+            timestamp = "",
+            direction = MessageDirection.INCOMING,
+            flightStatusPayload = item.payload,
+        )
         is ChatItem.System -> ChatMessage(
             id = "",
             text = item.text,

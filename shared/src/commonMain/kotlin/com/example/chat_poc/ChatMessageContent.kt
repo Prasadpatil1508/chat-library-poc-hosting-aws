@@ -17,17 +17,27 @@ import com.example.chat_poc.connect.QuickReply
 import com.example.chat_poc.markdown.MarkdownRenderer
 
 /**
- * Renders a chat message (plain text, Markdown, or quick replies). Markdown is rendered inside the SDK via
+ * Renders a chat message (plain text, Markdown, quick replies, or flight status). Markdown is rendered inside the SDK via
  * [MarkdownRenderer]. When [msg.quickReplies] is non-null, shows a title and clickable options; [onQuickReplyClick]
  * is invoked with the option's value when the user taps an option (caller should send that value to the server).
+ * When [msg.flightStatusPayload] is non-null, shows a custom flight-status card; [onFlightActionClick] is invoked
+ * with the action href when the user taps an action (e.g. host can open the URL).
  */
 @Composable
 fun ChatMessageContent(
     msg: ChatMessage,
     modifier: Modifier = Modifier,
     onQuickReplyClick: ((value: String) -> Unit)? = null,
+    onFlightActionClick: ((href: String) -> Unit)? = null,
 ) {
     when {
+        msg.flightStatusPayload != null -> {
+            FlightStatusContent(
+                payload = msg.flightStatusPayload,
+                modifier = modifier,
+                onActionClick = onFlightActionClick,
+            )
+        }
         msg.quickReplies != null && msg.quickReplies.isNotEmpty() -> {
             Column(modifier = modifier.fillMaxWidth()) {
                 if (msg.text.isNotBlank()) {
