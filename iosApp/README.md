@@ -37,7 +37,7 @@ When you have the library repo on disk and want to build the framework yourself:
 From the library repo root (on a Mac):
 
 ```bash
-./gradlew :shared:assembleReleaseXCFramework
+./gradlew :shared:assembleSharedReleaseXCFramework
 ```
 
 The XCFramework is produced under `shared/build/XCFrameworks/release/` (exact name may vary, e.g. `ChatSDK.xcframework`).
@@ -53,11 +53,13 @@ The XCFramework is produced under `shared/build/XCFrameworks/release/` (exact na
 - Your app must link and embed the `ChatSDK.xcframework` (see above).
 - Present the view controller returned by the library as a modal or sheet.
 
+**Optional (high refresh rate):** For best performance on ProMotion iPhones, add to Info.plist: `CADisableMinimumFrameDurationOnPhone` (Boolean, YES). The library disables the strict plist check so the chat sheet works without this; add it only if you want to optimize.
+
 ## Usage
 
 Import the framework and call `createBottomSheetViewController()` when the user taps your button. Present that view controller modally (e.g. as a sheet).
 
-The Kotlin export is generated from the package and file name. Use the generated class `Com_example_chat_pocChatPoc_iosKt` and its function `createBottomSheetViewController()`. Use autocomplete or inspect the framework headers if the name differs in your build.
+Use the class `ChatPoc_iosKt` and its function `createBottomSheetViewController()`. (The framework exports this name from the Kotlin `ChatPoc.ios.kt` file.)
 
 ### SwiftUI
 
@@ -80,7 +82,7 @@ struct ContentView: View {
 
 struct ChatSheetView: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> UIViewController {
-        Com_example_chat_pocChatPoc_iosKt.createBottomSheetViewController()
+        ChatPoc_iosKt.createBottomSheetViewController()
     }
 
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
@@ -97,8 +99,8 @@ import ChatSDK
 
 class ViewController: UIViewController {
     @IBAction func openChatTapped(_ sender: Any) {
-        let vc = Com_example_chat_pocChatPoc_iosKt.createBottomSheetViewController()
-        Com_example_chat_pocChatPoc_iosKt.setBottomSheetDismissHandler { [weak vc] in
+        let vc = ChatPoc_iosKt.createBottomSheetViewController()
+        ChatPoc_iosKt.setBottomSheetDismissHandler { [weak vc] in
             vc?.dismiss(animated: true)
         }
         vc.modalPresentationStyle = .pageSheet

@@ -21,7 +21,7 @@ val generateConnectConfig = tasks.register("generateConnectConfig") {
     val outputFile = file("src/commonMain/kotlin/com/example/chat_poc/config/LibraryConnectConfig.kt")
     val localPropsFile = rootProject.file("local.properties")
     outputs.file(outputFile)
-    inputs.file(localPropsFile)
+    if (localPropsFile.exists()) inputs.file(localPropsFile)
     doLast {
         val props = Properties()
         if (localPropsFile.exists()) localPropsFile.reader().use { props.load(it) }

@@ -175,7 +175,7 @@ dependencies {
 On a Mac:
 
 ```bash
-./gradlew :shared:assembleReleaseXCFramework
+./gradlew :shared:assembleSharedReleaseXCFramework
 ```
 
 Output: `shared/build/XCFrameworks/release/` (contains the framework, e.g. `ChatSDK.xcframework` or similar).

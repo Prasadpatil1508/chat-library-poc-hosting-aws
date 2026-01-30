@@ -148,7 +148,7 @@ class MainActivity : ComponentActivity() {
 **"Library compiled with newer Kotlin/Native compiler" (e.g. ScreenTime | ios_simulator_arm64):**
 - The IDE is using an older Kotlin/Native plugin that can't read the 2.3.0 platform klibs in `~/.konan/kotlin-native-prebuilt-macos-aarch64-2.3.0/`.
 - **Do not** downgrade the project to Kotlin 2.0.21 unless you use the "Last resort" option below — the library uses Kotlin 2.3.0 and downgrading would break the build and the host app.
-- **Fix 1 (confirm it's IDE-only):** From the **library** repo run: `./gradlew :shared:assembleRelease :shared:assembleReleaseXCFramework`. If that succeeds, the project is fine; the error is only the IDE not being able to read the klibs.
+- **Fix 1 (confirm it's IDE-only):** From the **library** repo run: `./gradlew :shared:assembleRelease :shared:assembleSharedReleaseXCFramework`. If that succeeds, the project is fine; the error is only the IDE not being able to read the klibs.
 - **Fix 2:** Update **Android Studio** and **Kotlin** plugin (Settings → Plugins → Kotlin → Update). Then **File → Invalidate Caches / Restart**. After a **new** Android Studio install, also try: close the project, delete the project's `.idea` folder and `.gradle` folder (inside the library repo), then **File → Open** the project again so the IDE re-imports with the new Kotlin support.
 - **Fix 3:** Dismiss the notification (e.g. "Don't show again" or close it). You can keep working: run and build from Gradle or the Run button; only the IDE's analysis of the Native klibs is limited.
 - **Last resort (IDE must read klibs):** If you must get rid of the IDE error and are okay downgrading the **entire** library and **host** to Kotlin 2.0.21: in this repo set `kotlin = "2.0.21"` in `gradle/libs.versions.toml`, update the Compose compiler/Kotlin plugin references, then run `./gradlew clean :shared:publishToMavenLocal`. In the host app set Kotlin to 2.0.21 and re-sync. You will lose 2.3.0 features and must keep library and host on the same Kotlin version.
@@ -164,7 +164,7 @@ Test the library in your iOS app by building the XCFramework locally and adding 
 From the **library repo** (`chat-library-poc/`):
 
 ```bash
-./gradlew :shared:assembleReleaseXCFramework
+./gradlew :shared:assembleSharedReleaseXCFramework
 ```
 
 The XCFramework is created at:
@@ -206,7 +206,7 @@ struct ContentView: View {
 
 struct ChatSheetView: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> UIViewController {
-        Com_example_chat_pocChatPoc_iosKt.createBottomSheetViewController()
+        ChatPoc_iosKt.createBottomSheetViewController()
     }
 
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
@@ -221,8 +221,8 @@ import ChatSDK
 
 class ViewController: UIViewController {
     @IBAction func openChatTapped(_ sender: Any) {
-        let vc = Com_example_chat_pocChatPoc_iosKt.createBottomSheetViewController()
-        Com_example_chat_pocChatPoc_iosKt.setBottomSheetDismissHandler { [weak vc] in
+        let vc = ChatPoc_iosKt.createBottomSheetViewController()
+        ChatPoc_iosKt.setBottomSheetDismissHandler { [weak vc] in
             vc?.dismiss(animated: true)
         }
         vc.modalPresentationStyle = .pageSheet
@@ -247,5 +247,5 @@ class ViewController: UIViewController {
 - The XCFramework includes `ios-arm64`, `ios-x86_64`, and `ios-arm64-simulator`. Use the same Xcode destination (Simulator or a real device) you used when building; the framework supports both.
 
 **After updating the library**
-- Re-run `./gradlew :shared:assembleReleaseXCFramework` in the library repo.
+- Re-run `./gradlew :shared:assembleSharedReleaseXCFramework` in the library repo.
 - In Xcode, ensure the app still points at the same `ChatSDK.xcframework` path (or re-add it if you moved the framework).
