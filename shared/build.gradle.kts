@@ -62,18 +62,15 @@ kotlin {
 
     // ---------- ANDROID (Android-KMP library plugin) ----------
     androidLibrary {
-    namespace = "com.example.chat_poc"
-    compileSdk = 35
-    minSdk = 24
-
-    // 🔑 REQUIRED so an Android AAR is published
-    publishLibraryVariants("release")
-
-    compilations.configureEach {
-        compileTaskProvider.configure {
-            compilerOptions {
-                (this as KotlinJvmCompilerOptions).jvmTarget.set(JvmTarget.JVM_1_8)
-                freeCompilerArgs.add("-Xexpect-actual-classes")
+        namespace = "com.example.chat_poc"
+        compileSdk = 35
+        minSdk = 24
+        compilations.configureEach {
+            compileTaskProvider.configure {
+                compilerOptions {
+                    (this as KotlinJvmCompilerOptions).jvmTarget.set(JvmTarget.JVM_1_8)
+                    freeCompilerArgs.add("-Xexpect-actual-classes")
+                }
             }
         }
     }
