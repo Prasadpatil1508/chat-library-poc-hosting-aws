@@ -50,7 +50,9 @@ jobs:
       - name: Zip XCFramework and compute checksum
         run: |
           cd shared/build/XCFrameworks/release
-          zip -r ChatSDK.xcframework.zip ChatSDK.xcframework
+          XCF=$(find . -maxdepth 1 -type d -name '*.xcframework' | head -1)
+          if [ -z "$XCF" ]; then echo "No .xcframework found in $(pwd):"; ls -la; exit 1; fi
+          zip -r ChatSDK.xcframework.zip "$XCF"
           shasum -a 256 ChatSDK.xcframework.zip | awk '{ print $1 }' > ../../../ChatSDK.xcframework.zip.sha256
           echo "CHECKSUM=$(cat ../../../ChatSDK.xcframework.zip.sha256)" >> $GITHUB_ENV
         id: checksum
