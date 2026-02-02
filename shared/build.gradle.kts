@@ -79,22 +79,20 @@ kotlin {
 
     // ---------- ANDROID ----------
     androidLibrary {
-        namespace = "com.example.chat_poc"
-        compileSdk = 35
-        minSdk = 24
+    namespace = "com.example.chat_poc"
+    compileSdk = 35
+    minSdk = 24
 
-        // 🔑 REQUIRED: create Android AAR
-        publishLibraryVariants("release")
-
-        compilations.configureEach {
-            compileTaskProvider.configure {
-                compilerOptions {
-                    (this as KotlinJvmCompilerOptions).jvmTarget.set(JvmTarget.JVM_1_8)
-                    freeCompilerArgs.add("-Xexpect-actual-classes")
-                }
+    compilations.configureEach {
+        compileTaskProvider.configure {
+            compilerOptions {
+                (this as KotlinJvmCompilerOptions).jvmTarget.set(JvmTarget.JVM_1_8)
+                freeCompilerArgs.add("-Xexpect-actual-classes")
             }
         }
     }
+}
+
 
     // ---------- iOS ----------
     val xcf = XCFramework()
