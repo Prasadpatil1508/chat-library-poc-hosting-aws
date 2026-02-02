@@ -133,15 +133,7 @@ kotlin {
 }
 
 // ---------- PUBLISHING ----------
-// Explicit Android AAR publication so host apps can use: implementation("com.example.chat_poc:shared:VERSION")
-afterEvaluate {
-    publishing.publications.create<MavenPublication>("androidRelease") {
-        groupId = "com.example.chat_poc"
-        artifactId = "shared"
-        version = project.version.toString()
-        from(components["release"])
-    }
-}
+// KMP plugin creates publications per target + root (kotlinMultiplatform). Consumers use: implementation("com.example.chat_poc:shared:VERSION")
 publishing {
 
     repositories {
