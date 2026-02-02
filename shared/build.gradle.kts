@@ -74,7 +74,6 @@ kotlin {
             }
         }
     }
-}
 
     // ---------- iOS XCFRAMEWORK ----------
     val xcf = XCFramework()
