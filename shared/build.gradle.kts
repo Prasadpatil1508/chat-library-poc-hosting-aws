@@ -2,7 +2,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompilerOptions
 import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
 import java.util.Properties
-import org.gradle.api.tasks.bundling.Jar
+import org.gradle.api.tasks.bundling.AbstractArchiveTask
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -72,7 +72,7 @@ val generateConnectConfig = tasks.register("generateConnectConfig") {
 // ---------- TASK DEPENDENCIES (GRADLE 8 SAFE) ----------
 //
 
-// Covers compile tasks + Android/Kotlin compilation
+// Compile tasks must wait for generated config
 tasks.configureEach {
     when {
         name.contains("compile", ignoreCase = true) &&
@@ -80,16 +80,17 @@ tasks.configureEach {
              name.contains("Android", ignoreCase = true)) -> {
             dependsOn(generateConnectConfig)
         }
-
-        name.endsWith("SourcesJar") -> {
-            dependsOn(generateConnectConfig)
-        }
     }
 }
 
-// 🔑 THIS WAS MISSING — fixes `:shared:sourcesJar` failure
-tasks.withType<Jar>().configureEach {
+// All archive tasks (aar, sourcesJar, metadata jars)
+tasks.withType<AbstractArchiveTask>().configureEach {
     dependsOn(generateConnectConfig)
+}
+
+// Explicitly declare generated file as input of sourcesJar (NO type cast)
+tasks.matching { it.name == "sourcesJar" }.configureEach {
+    inputs.files(generateConnectConfig.map { it.outputs.files })
 }
 
 //
@@ -177,10 +178,13 @@ kotlin {
 publishing {
     repositories {
 
+        // Local testing
         mavenLocal()
 
+        // AWS CodeArtifact
         maven {
             name = "AWSCodeArtifact"
+
             val domain = System.getenv("AWS_DOMAIN") ?: ""
             val accountId = System.getenv("AWS_ACCOUNT_ID") ?: ""
             val region = System.getenv("AWS_REGION") ?: ""
