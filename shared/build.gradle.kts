@@ -79,20 +79,19 @@ kotlin {
 
     // ---------- ANDROID ----------
     androidLibrary {
-    namespace = "com.example.chat_poc"
-    compileSdk = 35
-    minSdk = 24
+        namespace = "com.example.chat_poc"
+        compileSdk = 35
+        minSdk = 24
 
-    compilations.configureEach {
-        compileTaskProvider.configure {
-            compilerOptions {
-                (this as KotlinJvmCompilerOptions).jvmTarget.set(JvmTarget.JVM_1_8)
-                freeCompilerArgs.add("-Xexpect-actual-classes")
+        compilations.configureEach {
+            compileTaskProvider.configure {
+                compilerOptions {
+                    (this as KotlinJvmCompilerOptions).jvmTarget.set(JvmTarget.JVM_1_8)
+                    freeCompilerArgs.add("-Xexpect-actual-classes")
+                }
             }
         }
     }
-}
-
 
     // ---------- iOS ----------
     val xcf = XCFramework()
@@ -151,26 +150,7 @@ kotlin {
 }
 
 //
-// ---------- ANDROID MAVEN PUBLICATION ----------
-//
-
-afterEvaluate {
-    publishing {
-        publications {
-            create<MavenPublication>("sharedAndroid") {
-                groupId = "com.example.chat_poc"
-                artifactId = "shared-android"
-                version = project.version.toString()
-
-                // ✅ Correct for Android KMP Library plugin
-                from(components["android"])
-            }
-        }
-    }
-}
-
-//
-// ---------- REPOSITORIES ----------
+// ---------- PUBLISHING (REPOSITORIES ONLY) ----------
 //
 
 publishing {
