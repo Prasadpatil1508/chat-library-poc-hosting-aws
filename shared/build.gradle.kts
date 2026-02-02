@@ -2,6 +2,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmCompilerOptions
 import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
 import java.util.Properties
+import org.gradle.api.tasks.bundling.Jar
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -68,10 +69,10 @@ val generateConnectConfig = tasks.register("generateConnectConfig") {
 }
 
 //
-// ---------- IMPORTANT: GRADLE 8 TASK WIRING ----------
-// Ensures generateConnectConfig runs BEFORE any compile or sourcesJar task
+// ---------- TASK DEPENDENCIES (GRADLE 8 SAFE) ----------
 //
 
+// Covers compile tasks + Android/Kotlin compilation
 tasks.configureEach {
     when {
         name.contains("compile", ignoreCase = true) &&
@@ -84,6 +85,11 @@ tasks.configureEach {
             dependsOn(generateConnectConfig)
         }
     }
+}
+
+// 🔑 THIS WAS MISSING — fixes `:shared:sourcesJar` failure
+tasks.withType<Jar>().configureEach {
+    dependsOn(generateConnectConfig)
 }
 
 //
@@ -166,7 +172,6 @@ kotlin {
 
 //
 // ---------- PUBLISHING (REPOSITORIES ONLY) ----------
-// Android KMP publishes the AAR automatically as part of `shared`
 //
 
 publishing {
