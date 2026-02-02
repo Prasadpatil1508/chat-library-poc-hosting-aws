@@ -164,7 +164,7 @@ afterEvaluate {
                 artifactId = "shared-android"
                 version = project.version.toString()
 
-                // ✅ CORRECT for Android KMP
+                // ✅ Correct for Android KMP Library plugin
                 from(components["release"])
             }
         }
