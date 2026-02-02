@@ -25,7 +25,9 @@ val generateConnectConfig = tasks.register("generateConnectConfig") {
     val localPropsFile = rootProject.file("local.properties")
 
     outputs.file(outputFile)
-    if (localPropsFile.exists()) inputs.file(localPropsFile)
+    if (localPropsFile.exists()) {
+        inputs.file(localPropsFile)
+    }
 
     doLast {
         val props = Properties()
@@ -65,10 +67,23 @@ val generateConnectConfig = tasks.register("generateConnectConfig") {
     }
 }
 
-tasks.matching {
-    it.name.contains("compile") && it.name.contains("Kotlin")
-}.configureEach {
-    dependsOn(generateConnectConfig)
+//
+// ---------- IMPORTANT: GRADLE 8 TASK WIRING ----------
+// Ensures generateConnectConfig runs BEFORE any compile or sourcesJar task
+//
+
+tasks.configureEach {
+    when {
+        name.contains("compile", ignoreCase = true) &&
+            (name.contains("Kotlin", ignoreCase = true) ||
+             name.contains("Android", ignoreCase = true)) -> {
+            dependsOn(generateConnectConfig)
+        }
+
+        name.endsWith("SourcesJar") -> {
+            dependsOn(generateConnectConfig)
+        }
+    }
 }
 
 //
@@ -151,6 +166,7 @@ kotlin {
 
 //
 // ---------- PUBLISHING (REPOSITORIES ONLY) ----------
+// Android KMP publishes the AAR automatically as part of `shared`
 //
 
 publishing {
