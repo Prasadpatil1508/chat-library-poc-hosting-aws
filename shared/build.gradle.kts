@@ -133,7 +133,6 @@ kotlin {
 }
 
 // ---------- PUBLISHING ----------
-// KMP plugin creates publications per target + root (kotlinMultiplatform). Consumers use: implementation("com.example.chat_poc:shared:VERSION")
 publishing {
 
     repositories {
