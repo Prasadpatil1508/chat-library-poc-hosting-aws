@@ -36,11 +36,11 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Publish to AWS CodeArtifact
+      - name: Publish Android library to AWS CodeArtifact
         run: |
           chmod +x gradlew
           VERSION="${GITHUB_REF#refs/tags/v}"
-          ./gradlew publishAllPublicationsToAWSCodeArtifactRepository \
+          ./gradlew :shared:publish \
             -PLIB_VERSION="$VERSION" \
             --no-daemon
 
