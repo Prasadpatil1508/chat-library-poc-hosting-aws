@@ -163,7 +163,7 @@ afterEvaluate {
                 version = project.version.toString()
 
                 // ✅ Correct for Android KMP Library plugin
-                from(components["release"])
+                from(components["android"])
             }
         }
     }
