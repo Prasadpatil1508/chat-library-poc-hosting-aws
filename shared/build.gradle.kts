@@ -62,18 +62,22 @@ kotlin {
 
     // ---------- ANDROID (Android-KMP library plugin) ----------
     androidLibrary {
-        namespace = "com.example.chat_poc"
-        compileSdk = 35
-        minSdk = 24
-        compilations.configureEach {
-            compileTaskProvider.configure {
-                compilerOptions {
-                    (this as KotlinJvmCompilerOptions).jvmTarget.set(JvmTarget.JVM_1_8)
-                    freeCompilerArgs.add("-Xexpect-actual-classes")
-                }
+    namespace = "com.example.chat_poc"
+    compileSdk = 35
+    minSdk = 24
+
+    // 🔑 REQUIRED so an Android AAR is published
+    publishLibraryVariants("release")
+
+    compilations.configureEach {
+        compileTaskProvider.configure {
+            compilerOptions {
+                (this as KotlinJvmCompilerOptions).jvmTarget.set(JvmTarget.JVM_1_8)
+                freeCompilerArgs.add("-Xexpect-actual-classes")
             }
         }
     }
+}
 
     // ---------- iOS XCFRAMEWORK ----------
     val xcf = XCFramework()
@@ -133,8 +137,15 @@ kotlin {
 }
 
 // ---------- PUBLISHING ----------
-// KMP creates root (shared) + target publications automatically.
-// With Android-KMP plugin, the single Android variant is included in the root publication by default.
+// Explicit Android AAR publication so host apps can use: implementation("com.example.chat_poc:shared:VERSION")
+afterEvaluate {
+    publishing.publications.create<MavenPublication>("androidRelease") {
+        groupId = "com.example.chat_poc"
+        artifactId = "shared"
+        version = project.version.toString()
+        from(components["release"])
+    }
+}
 publishing {
 
     repositories {
@@ -157,19 +168,6 @@ publishing {
             }
         }
 
-        // GitHub Packages for remote publishing
-        maven {
-            name = "GitHubPackages"
-            url = uri(
-                project.findProperty("GITHUB_PACKAGES_URL")?.toString()
-                    ?: "https://maven.pkg.github.com/PrathameshAdate05/chat-library-poc"
-            )
-            credentials {
-                username = project.findProperty("gpr.user")?.toString()
-                    ?: System.getenv("GITHUB_ACTOR") ?: ""
-                password = project.findProperty("gpr.token")?.toString()
-                    ?: System.getenv("GITHUB_TOKEN") ?: ""
-            }
-        }
+    
     }
 }

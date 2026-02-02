@@ -123,6 +123,128 @@ gpr.token=YOUR_GITHUB_PERSONAL_ACCESS_TOKEN
 
 ---
 
+## Add the library from AWS CodeArtifact (step-by-step)
+
+If the library is published to **AWS CodeArtifact** (Maven), add it to your Android app as follows.
+
+### Step 1: Get your CodeArtifact Maven URL
+
+The URL format is:
+
+`https://YOUR_DOMAIN-YOUR_ACCOUNT_ID.d.codeartifact.YOUR_REGION.amazonaws.com/maven/YOUR_REPO/`
+
+Example: `https://my-domain-123456789012.d.codeartifact.us-east-1.amazonaws.com/maven/my-repo/`
+
+You can copy this from **AWS Console → CodeArtifact → your domain → your Maven repository → View connection instructions → Maven**.
+
+### Step 2: Add the CodeArtifact repository in your app
+
+In your app’s **root** `settings.gradle.kts` (or where `dependencyResolutionManagement` is defined), add the CodeArtifact Maven repo. Replace the URL with your actual CodeArtifact Maven URL from Step 1:
+
+```kotlin
+dependencyResolutionManagement {
+    repositories {
+        google()
+        mavenCentral()
+        maven {
+            name = "AWSCodeArtifact"
+            url = uri("https://YOUR_DOMAIN-YOUR_ACCOUNT_ID.d.codeartifact.YOUR_REGION.amazonaws.com/maven/YOUR_REPO/")
+            credentials {
+                username = "aws"
+                password = providers.gradleProperty("codeartifact.token").getOrElse(System.getenv("CODEARTIFACT_AUTH_TOKEN") ?: "")
+            }
+        }
+    }
+}
+```
+
+If your project declares repositories in the **root** `build.gradle.kts` instead:
+
+```kotlin
+maven {
+    name = "AWSCodeArtifact"
+    url = uri("https://YOUR_DOMAIN-YOUR_ACCOUNT_ID.d.codeartifact.YOUR_REGION.amazonaws.com/maven/YOUR_REPO/")
+    credentials {
+        username = "aws"
+        password = project.findProperty("codeartifact.token")?.toString() ?: System.getenv("CODEARTIFACT_AUTH_TOKEN") ?: ""
+    }
+}
+```
+
+### Step 3: Add the dependency
+
+In your **app** module’s `build.gradle.kts` (e.g. `app/build.gradle.kts`):
+
+```kotlin
+dependencies {
+    implementation("com.example.chat_poc:shared:1.0.1")
+}
+```
+
+Use the version you published (e.g. `1.0.1` for release tag `v1.0.1`).
+
+### Step 4: Provide the CodeArtifact auth token (local development)
+
+CodeArtifact requires an auth token (valid ~12 hours). Run once per session (or add to your shell profile):
+
+```bash
+export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token \
+  --domain YOUR_DOMAIN \
+  --domain-owner YOUR_ACCOUNT_ID \
+  --query authorizationToken --output text)
+```
+
+Replace `YOUR_DOMAIN` and `YOUR_ACCOUNT_ID` with your CodeArtifact domain name and AWS account ID. Then run your app from the same terminal (e.g. `./gradlew :app:installDebug` or Android Studio Run).
+
+**Alternative:** put the token in `~/.gradle/gradle.properties` (do not commit this file):
+
+```properties
+codeartifact.token=YOUR_TOKEN_HERE
+```
+
+Get the token with the same `aws codeartifact get-authorization-token` command and paste the output. Refresh the token when it expires (~12 hours).
+
+### Step 5: Align Kotlin and Compose (required)
+
+The library is built with **Kotlin 2.3.0** and **Compose 1.10**. Your app must match (see [LOCAL_TESTING.md](../LOCAL_TESTING.md) for details):
+
+- **Kotlin:** `2.3.0` in your version catalog or root `build.gradle.kts`.
+- **Compose BOM:** `2025.01.00` or newer (so Compose 1.10 runtime is used).
+
+Sync Gradle and rebuild.
+
+### Step 6: Use the library in your Activity
+
+Your Activity must extend **`ComponentActivity`** (e.g. `AppCompatActivity`). When the user taps a button, call:
+
+```kotlin
+import com.example.chat_poc.ChatPoc
+import com.example.chat_poc.showBottomSheet
+
+// In your Activity (e.g. in a button click listener):
+ChatPoc.showBottomSheet(this)
+```
+
+**Compose example:**
+
+```kotlin
+Button(onClick = { ChatPoc.showBottomSheet(this@MainActivity) }) {
+    Text("Open Chat")
+}
+```
+
+**View/XML example:**
+
+```kotlin
+findViewById<View>(R.id.button_open_chat).setOnClickListener {
+    ChatPoc.showBottomSheet(this)
+}
+```
+
+That’s it. Build and run; tapping the button should open the chat bottom sheet.
+
+---
+
 ## Add the library locally (source or project)
 
 ### Option A: From the same repo or a local clone
