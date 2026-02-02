@@ -177,13 +177,13 @@ In your **app** module’s `build.gradle.kts` (e.g. `app/build.gradle.kts`):
 
 ```kotlin
 dependencies {
-    implementation("com.example.chat_poc:shared-android:1.0.1")
+    implementation("com.example.chat_poc:shared:1.0.2")
 }
 ```
 
-Use the version you published (e.g. `1.0.1` for release tag `v1.0.1`).
+Use the version you published (e.g. `1.0.2` for release tag `v1.0.2`).
 
-**If you get “Unresolved reference: chat_poc”:** KMP publishes a separate Android artifact. Use **`shared-android`** (not `shared`) as the artifact name: `com.example.chat_poc:shared-android:VERSION`.
+**If you get “Unresolved reference: chat_poc”:** (1) Ensure **CodeArtifact token** is set when Gradle runs: export `CODEARTIFACT_AUTH_TOKEN` in the same terminal where you run/sync, or add `codeartifact.token=…` to `~/.gradle/gradle.properties` and use it in the repo credentials. (2) Try **`shared-android`** instead of `shared`: `implementation("com.example.chat_poc:shared-android:VERSION")`. (3) After the library adds a “shared” publication, republish and use `shared` again.
 
 ### Step 4: Provide the CodeArtifact auth token (local development)
 

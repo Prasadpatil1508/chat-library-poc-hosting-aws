@@ -133,6 +133,20 @@ kotlin {
 }
 
 // ---------- PUBLISHING ----------
+// Add a "shared" publication so host apps can use implementation("com.example.chat_poc:shared:VERSION")
+afterEvaluate {
+    val existingAndroidPub = publishing.publications.findByName("release")
+        ?: publishing.publications.find { it.name.contains("android", ignoreCase = true) }
+    val mavenPub = existingAndroidPub as? org.gradle.api.publish.maven.MavenPublication
+    if (mavenPub != null && mavenPub.component.isPresent) {
+        publishing.publications.create<MavenPublication>("shared") {
+            groupId = "com.example.chat_poc"
+            artifactId = "shared"
+            version = project.version.toString()
+            from(mavenPub.component.get())
+        }
+    }
+}
 publishing {
 
     repositories {
