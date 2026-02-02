@@ -14,6 +14,7 @@ plugins {
 }
 
 group = "com.example.chat_poc"
+// Library version: set via -PLIB_VERSION= or default "1.0.0"
 version = project.findProperty("LIB_VERSION")?.toString() ?: "1.0.0"
 
 // ---------- CONNECT CONFIG (from local.properties, overwrites stub) ----------
@@ -139,7 +140,23 @@ publishing {
     repositories {
         // Maven Local for local testing
         mavenLocal()
-        
+
+        // AWS CodeArtifact (Maven): URL from env AWS_DOMAIN, AWS_ACCOUNT_ID, AWS_REGION, AWS_REPO
+        maven {
+            name = "AWSCodeArtifact"
+            val domain = System.getenv("AWS_DOMAIN") ?: ""
+            val accountId = System.getenv("AWS_ACCOUNT_ID") ?: ""
+            val region = System.getenv("AWS_REGION") ?: ""
+            val repo = System.getenv("AWS_REPO") ?: ""
+            url = uri(
+                "https://${domain}-${accountId}.d.codeartifact.${region}.amazonaws.com/maven/${repo}/"
+            )
+            credentials {
+                username = "aws"
+                password = System.getenv("CODEARTIFACT_AUTH_TOKEN") ?: ""
+            }
+        }
+
         // GitHub Packages for remote publishing
         maven {
             name = "GitHubPackages"

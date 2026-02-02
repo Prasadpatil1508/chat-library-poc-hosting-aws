@@ -246,3 +246,65 @@ Then in Xcode: Add Package Dependencies → `https://github.com/YOUR_GITHUB_OWNE
 - [ ] **iOS:** XCFramework built, zipped, and attached to a GitHub Release; app either uses SPM (Package.swift + binary target) or manual XCFramework from the release URL.
 
 Replace `YOUR_GITHUB_OWNER` (and repo name if different) everywhere with your actual GitHub owner and repository.
+
+---
+
+## 4. Testing the hosted publish (from this repo, no local build)
+
+Use this flow to test the **hosted** pipeline: push code → configure secrets → push a tag → workflow publishes to **AWS CodeArtifact** and creates a **GitHub Release** with the XCFramework. No local Gradle or Xcode build required.
+
+### Step 1: Push your code
+
+From the repo root:
+
+```bash
+git add .
+git status   # confirm .github/workflows/publish.yml, shared/build.gradle.kts, Package.swift, etc.
+git commit -m "Add publish workflow: CodeArtifact + GitHub Release"
+git push origin feature   # or main / your branch name
+```
+
+Ensure the branch you push is the one you use for releases (e.g. `main` or `feature`). The tag you push in Step 4 can be on any commit on the remote.
+
+### Step 2: Configure GitHub secrets
+
+In **this repo on GitHub**: **Settings → Secrets and variables → Actions → New repository secret**. Add:
+
+| Secret | Description |
+|--------|-------------|
+| `AWS_ACCESS_KEY_ID` | IAM user access key (needs `codeartifact:GetAuthorizationToken` and publish rights to the repo). |
+| `AWS_SECRET_ACCESS_KEY` | IAM user secret key. |
+| `AWS_REGION` | e.g. `us-east-1`. |
+| `AWS_ACCOUNT_ID` | Your AWS account ID (CodeArtifact domain owner). |
+| `AWS_DOMAIN` | CodeArtifact domain name. |
+| `AWS_REPO` | CodeArtifact Maven repository name. |
+
+The workflow uses the built-in `GITHUB_TOKEN` for creating the release; no extra secret for that.
+
+### Step 3: Trigger the workflow with a tag
+
+Create and push a tag (e.g. for version `1.0.0`). The workflow runs on **push** of any tag matching `v*`.
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+### Step 4: Check the hosted result
+
+1. **Actions:** In this repo, open **Actions** → select the **Publish** run for the tag (e.g. `v1.0.0`). Confirm all steps succeed.
+2. **CodeArtifact:** In AWS Console → CodeArtifact → your domain → your Maven repo. You should see `com.example.chat_poc:shared:1.0.0` (or the version from the tag).
+3. **GitHub Release:** In this repo → **Releases**. There should be a release for `v1.0.0` with assets:
+   - `ChatSDK.xcframework.zip`
+   - `ChatSDK.xcframework.zip.sha256`
+
+That’s the hosted test: Android/Common from CodeArtifact, iOS from the release zip.
+
+### Step 5: After the first successful run
+
+- **Package.swift:** In this repo, replace `YOUR_ORG` and `YOUR_REPO` in the binary URL with your GitHub org/repo, set the tag in the URL (e.g. `v1.0.0`), and set `checksum` to the value inside the release’s `ChatSDK.xcframework.zip.sha256` (or from `swift package compute-checksum` on the downloaded zip). Then commit and push so SPM consumers can use the package.
+- **Consumers:** Android apps add your CodeArtifact Maven repo and `implementation("com.example.chat_poc:shared:1.0.0")`; iOS apps use the release zip URL or add this repo as an SPM dependency.
+
+### Optional: local dry-run (no tag, no GitHub)
+
+If you ever want to run the same publish and XCFramework steps on your machine: set `CODEARTIFACT_AUTH_TOKEN`, `AWS_DOMAIN`, `AWS_ACCOUNT_ID`, `AWS_REGION`, `AWS_REPO`, then run `./gradlew publishAllPublicationsToAWSCodeArtifactRepository -PLIB_VERSION=1.0.0` and `./gradlew :shared:assembleSharedReleaseXCFramework` (see older docs or workflow steps for exact commands).
