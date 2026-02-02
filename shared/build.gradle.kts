@@ -83,7 +83,7 @@ kotlin {
         compileSdk = 35
         minSdk = 24
 
-        // 🔑 REQUIRED: publishes an Android AAR
+        // 🔑 REQUIRED: create Android AAR
         publishLibraryVariants("release")
 
         compilations.configureEach {
@@ -163,7 +163,9 @@ afterEvaluate {
                 groupId = "com.example.chat_poc"
                 artifactId = "shared-android"
                 version = project.version.toString()
-                from(components["android"])
+
+                // ✅ CORRECT for Android KMP
+                from(components["release"])
             }
         }
     }
