@@ -2,7 +2,92 @@
 
 This folder describes how to add the Chat Library (ChatSDK XCFramework) to a Swift or SwiftUI app and show the bottom sheet when the user taps a button.
 
-## Add the framework from GitHub (recommended)
+---
+
+## Step-by-step: Add the library to your iOS app (no token, no CLI)
+
+Unlike Android (CodeArtifact + token), iOS uses the **XCFramework from a GitHub Release** via Swift Package Manager. No AWS CLI, no secrets, no `local.properties` in the app.
+
+### Step 1: Add the package in Xcode
+
+1. Open your **iOS app** project in Xcode.
+2. **File** → **Add Package Dependencies…**
+3. In the search field, paste the **library repo URL**:
+   ```
+   https://github.com/Prasadpatil1508/chat-library-poc-hosting-aws
+   ```
+   (Replace with your org/repo if different.)
+4. Click **Add Package**.
+5. Ensure **ChatSDK** is selected and added to your **app target**. Click **Add Package** again.
+
+Xcode will fetch the `Package.swift` from the repo, download the XCFramework zip from the release URL in it, verify the checksum, and link the framework. No extra config.
+
+### Step 2: Use the library in your UI
+
+**SwiftUI (recommended):**
+
+1. In the view where you want the “Open Chat” button (e.g. `ContentView.swift`), add:
+
+```swift
+import SwiftUI
+import ChatSDK
+
+struct ContentView: View {
+    @State private var showChat = false
+
+    var body: some View {
+        Button("Open Chat Library") {
+            showChat = true
+        }
+        .sheet(isPresented: $showChat) {
+            ChatSheetView()
+        }
+    }
+}
+
+struct ChatSheetView: UIViewControllerRepresentable {
+    func makeUIViewController(context: Context) -> UIViewController {
+        ChatPoc_iosKt.createBottomSheetViewController()
+    }
+
+    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
+}
+```
+
+2. Build and run (⌘R). Tap the button; the chat bottom sheet should open.
+
+**UIKit:**
+
+```swift
+import UIKit
+import ChatSDK
+
+class ViewController: UIViewController {
+    @IBAction func openChatTapped(_ sender: Any) {
+        let vc = ChatPoc_iosKt.createBottomSheetViewController()
+        ChatPoc_iosKt.setBottomSheetDismissHandler { [weak vc] in
+            vc?.dismiss(animated: true)
+        }
+        vc.modalPresentationStyle = .pageSheet
+        present(vc, animated: true)
+    }
+}
+```
+
+### Step 3: Requirements
+
+- **iOS 14+** (the library’s `Package.swift` declares `.iOS(.v14)`).
+- No AWS CLI, no token, no `gradle.properties` – the binary comes from the GitHub Release URL in `Package.swift`.
+
+### If something goes wrong
+
+- **“No such module 'ChatSDK'”** – Confirm the package was added to your **app target** (Step 1.5). In the project navigator, select your app target → **General** → **Frameworks, Libraries, and Embedded Content** → **ChatSDK** should be listed.
+- **“Checksum mismatch”** – The library’s `Package.swift` points at a release (e.g. `v1.0.18`). If that release was re-uploaded or the zip changed, the checksum in `Package.swift` must be updated and the library repo republished. As an app developer, you just use the latest version; if the maintainer updates the tag/checksum, try **File** → **Packages** → **Reset Package Caches** and **Update to Latest Package Versions**.
+- **“Unable to find a specification for ...”** – You might have entered the wrong repo URL. Use the exact GitHub repo URL (e.g. `https://github.com/Prasadpatil1508/chat-library-poc-hosting-aws`).
+
+---
+
+## Add the framework from GitHub (other options)
 
 If the library repo publishes releases with an XCFramework zip (e.g. from [PUBLISHING.md](../PUBLISHING.md)):
 
