@@ -53,6 +53,7 @@ jobs:
           VERSION="${GITHUB_REF#refs/tags/v}"
 
           ./gradlew clean \
+            :shared:generateConnectConfig \
             :shared:publishAndroidPublicationToAWSCodeArtifactRepository \
             -PLIB_VERSION="$VERSION" \
             --no-daemon \
