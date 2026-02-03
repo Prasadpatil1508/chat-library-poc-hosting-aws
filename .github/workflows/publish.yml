@@ -47,6 +47,13 @@ jobs:
           echo "AWS_REGION=${{ secrets.AWS_REGION }}" >> $GITHUB_ENV
           echo "AWS_REPO=${{ secrets.AWS_REPO }}" >> $GITHUB_ENV
 
+      - name: Inject Connect config for remote library build
+        run: |
+          echo "API_GATEWAY=${{ secrets.API_GATEWAY }}" >> local.properties
+          echo "CONTACT_FLOW_ID=${{ secrets.CONTACT_FLOW_ID }}" >> local.properties
+          echo "INSTANCE_ID=${{ secrets.INSTANCE_ID }}" >> local.properties
+          echo "REGION=${{ secrets.REGION }}" >> local.properties
+
       - name: Publish Android library to AWS CodeArtifact
         run: |
           chmod +x gradlew
