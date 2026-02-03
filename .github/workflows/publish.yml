@@ -1,63 +1,80 @@
-# Publish Android/Common to AWS CodeArtifact and iOS XCFramework to GitHub Releases.
-# Trigger: push tag v* (e.g. v1.0.0).
 name: Publish
+
 on:
   push:
-    tags: ['v*']
+    tags:
+      - 'v*'
+
 jobs:
   publish:
     runs-on: macos-latest
+
+    env:
+      GRADLE_OPTS: "-Xmx4g -Dorg.gradle.jvmargs=-Xmx4g"
+      ORG_GRADLE_PROJECT_kotlin.native.ignoreDisabledTargets: "true"
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Configure AWS Credentials
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Get CodeArtifact authorization token
+      - name: Get CodeArtifact auth token
         run: |
           TOKEN=$(aws codeartifact get-authorization-token \
             --domain ${{ secrets.AWS_DOMAIN }} \
             --domain-owner ${{ secrets.AWS_ACCOUNT_ID }} \
-            --query authorizationToken --output text)
+            --region ${{ secrets.AWS_REGION }} \
+            --query authorizationToken \
+            --output text)
+
           echo "CODEARTIFACT_AUTH_TOKEN=$TOKEN" >> $GITHUB_ENV
           echo "AWS_DOMAIN=${{ secrets.AWS_DOMAIN }}" >> $GITHUB_ENV
           echo "AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID }}" >> $GITHUB_ENV
           echo "AWS_REGION=${{ secrets.AWS_REGION }}" >> $GITHUB_ENV
           echo "AWS_REPO=${{ secrets.AWS_REPO }}" >> $GITHUB_ENV
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
       - name: Publish Android library to AWS CodeArtifact
         run: |
           chmod +x gradlew
           VERSION="${GITHUB_REF#refs/tags/v}"
-          ./gradlew :shared:publish \
+
+          ./gradlew clean \
+            :shared:publishAndroidPublicationToAWSCodeArtifactRepository \
             -PLIB_VERSION="$VERSION" \
             --no-daemon
 
       - name: Assemble XCFramework
-        run: ./gradlew :shared:assembleSharedReleaseXCFramework --no-daemon
+        run: |
+          ./gradlew :shared:assembleSharedReleaseXCFramework --no-daemon
 
       - name: Zip XCFramework and compute checksum
         run: |
           cd shared/build/XCFrameworks/release
           XCF=$(find . -maxdepth 1 -type d -name '*.xcframework' | head -1)
-          if [ -z "$XCF" ]; then echo "No .xcframework found in $(pwd):"; ls -la; exit 1; fi
+
+          if [ -z "$XCF" ]; then
+            echo "No XCFramework found"
+            ls -la
+            exit 1
+          fi
+
           zip -r ChatSDK.xcframework.zip "$XCF"
           shasum -a 256 ChatSDK.xcframework.zip | awk '{ print $1 }' > ../../../ChatSDK.xcframework.zip.sha256
-          echo "CHECKSUM=$(cat ../../../ChatSDK.xcframework.zip.sha256)" >> $GITHUB_ENV
-        id: checksum
 
-      - name: Create GitHub Release and upload XCFramework
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
