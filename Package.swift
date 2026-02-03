@@ -19,7 +19,7 @@ let package = Package(
         .binaryTarget(
             name: "ChatSDK",
             url: "https://github.com/Prasadpatil1508/chat-library-poc-hosting-aws/releases/download/v1.0.1/ChatSDK.xcframework.zip",
-            checksum: "sha256:eb2d57577dfc9ea7123a0e582249a948b289d4941d423caf8605d7556de6e42e"
+            checksum: "37b3e6052575f1194e877af70c329aeea353062a87033f6e0aed64a0150a2294"
         ),
     ]
 )
