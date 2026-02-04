@@ -2,6 +2,8 @@
 
 This folder describes how to add the Chat Library to an Android app and show the bottom sheet when the user taps a button.
 
+**Distribution:** Both **Android** and **iOS** are published to the **same AWS CodeArtifact repository**; Android uses the Maven toolchain and iOS uses the Swift registry. Only the host app’s login (Gradle vs Swift) differs.
+
 ## Test locally (Maven Local) — quickest way
 
 Publish the library to your local Maven repository (`~/.m2/repository`) and add it to your Android app.

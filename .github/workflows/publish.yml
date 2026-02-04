@@ -32,7 +32,7 @@ jobs:
         run: |
           echo "org.gradle.jvmargs=-Dhttps.protocols=TLSv1.2,TLSv1.3 -Djdk.tls.client.protocols=TLSv1.2" >> gradle.properties
 
-      - name: Get CodeArtifact auth token
+      - name: Get CodeArtifact auth token and set repo vars
         run: |
           TOKEN=$(aws codeartifact get-authorization-token \
             --domain ${{ secrets.AWS_DOMAIN }} \
@@ -41,11 +41,13 @@ jobs:
             --query authorizationToken \
             --output text)
 
+          VERSION="${GITHUB_REF#refs/tags/v}"
           echo "CODEARTIFACT_AUTH_TOKEN=$TOKEN" >> $GITHUB_ENV
           echo "AWS_DOMAIN=${{ secrets.AWS_DOMAIN }}" >> $GITHUB_ENV
           echo "AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID }}" >> $GITHUB_ENV
           echo "AWS_REGION=${{ secrets.AWS_REGION }}" >> $GITHUB_ENV
           echo "AWS_REPO=${{ secrets.AWS_REPO }}" >> $GITHUB_ENV
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Inject Connect config for remote library build
         run: |
@@ -57,12 +59,10 @@ jobs:
       - name: Publish Android library to AWS CodeArtifact
         run: |
           chmod +x gradlew
-          VERSION="${GITHUB_REF#refs/tags/v}"
-
           ./gradlew clean \
             :shared:generateConnectConfig \
             :shared:publishAndroidPublicationToAWSCodeArtifactRepository \
-            -PLIB_VERSION="$VERSION" \
+            -PLIB_VERSION="${{ env.VERSION }}" \
             --no-daemon \
             --no-configuration-cache
 
@@ -72,12 +72,33 @@ jobs:
             --no-daemon \
             --no-configuration-cache
 
-      - name: Zip XCFramework and compute checksum
+      - name: Copy XCFramework to repo root for Swift package
+        run: |
+          XCF=$(find shared/build/XCFrameworks/release -maxdepth 1 -type d -name '*.xcframework' | head -1)
+          cp -R "$XCF" ./ChatSDK.xcframework
+
+      - name: Zip XCFramework and compute checksum (GitHub Release asset)
         run: |
           cd shared/build/XCFrameworks/release
           XCF=$(find . -maxdepth 1 -type d -name '*.xcframework' | head -1)
           zip -r ChatSDK.xcframework.zip "$XCF"
           shasum -a 256 ChatSDK.xcframework.zip | awk '{ print $1 }' > ../../../ChatSDK.xcframework.zip.sha256
+
+      - name: Publish iOS Swift package to AWS CodeArtifact (same repo as Android)
+        run: |
+          aws codeartifact login --tool swift \
+            --domain ${{ env.AWS_DOMAIN }} \
+            --domain-owner ${{ env.AWS_ACCOUNT_ID }} \
+            --repository ${{ env.AWS_REPO }} \
+            --region ${{ env.AWS_REGION }}
+
+          swift package archive-source
+
+          SWIFT_REGISTRY_URL="https://${{ env.AWS_DOMAIN }}-${{ env.AWS_ACCOUNT_ID }}.d.codeartifact.${{ env.AWS_REGION }}.amazonaws.com/swift/${{ env.AWS_REPO }}/company/chat-sdk/${{ env.VERSION }}"
+          curl -X PUT --user "aws:${{ env.CODEARTIFACT_AUTH_TOKEN }}" \
+            -H "Accept: application/vnd.swift.registry.v1+json" \
+            -F "source-archive=@ChatSDK.zip" \
+            "$SWIFT_REGISTRY_URL"
 
       - uses: softprops/action-gh-release@v2
         with:

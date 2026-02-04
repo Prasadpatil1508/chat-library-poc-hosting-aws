@@ -2,11 +2,45 @@
 
 This folder describes how to add the Chat Library (ChatSDK XCFramework) to a Swift or SwiftUI app and show the bottom sheet when the user taps a button.
 
+**Distribution:** Both **Android** and **iOS** are published to the **same AWS CodeArtifact repository**; Android uses the Maven toolchain and iOS uses the Swift registry. Only the host app’s login (Gradle vs Swift) differs.
+
 ---
 
-## Step-by-step: Add the library to your iOS app (no token, no CLI)
+## Option A: Add the library from AWS CodeArtifact (Swift registry, same repo as Android)
 
-Unlike Android (CodeArtifact + token), iOS uses the **XCFramework from a GitHub Release** via Swift Package Manager. No AWS CLI, no secrets, no `local.properties` in the app.
+The library is published to AWS CodeArtifact’s **Swift** registry under the same repository name used for Android (e.g. `chat-sdk-repo-dev`). Use the Swift toolchain to consume it.
+
+### Step 1: Configure Swift with CodeArtifact (one-time per machine / 12h token)
+
+In a terminal (with AWS CLI configured):
+
+```bash
+aws codeartifact login --tool swift \
+  --domain YOUR_DOMAIN \
+  --domain-owner YOUR_ACCOUNT_ID \
+  --repository YOUR_REPO \
+  --region YOUR_REGION
+```
+
+Use the **same** domain, account ID, repository name, and region as for Android. This configures the Swift Package Manager to use your CodeArtifact Swift registry.
+
+### Step 2: Add the package in Xcode
+
+1. **File** → **Add Package Dependencies…**
+2. In the search bar, enter the package identifier: **`company.chat-sdk`** (scope: `company`, package: `chat-sdk`).
+3. Select the version you want (e.g. `1.0.0`) and add the **ChatSDK** product to your app target.
+
+The package is resolved from the CodeArtifact Swift registry. No GitHub repo URL needed.
+
+### Step 3: Use the library in your UI
+
+See **Step 2** under Option B below (same code: `ChatPoc_iosKt.createBottomSheetViewController(config:callbacks:)` and `defaultChatLibraryConfig()`).
+
+---
+
+## Option B: Add the library from GitHub Release (legacy)
+
+If the library also publishes an XCFramework zip to GitHub Releases, you can add the package by **repository URL** instead of the CodeArtifact Swift registry.
 
 ### Step 1: Add the package in Xcode
 
@@ -20,7 +54,7 @@ Unlike Android (CodeArtifact + token), iOS uses the **XCFramework from a GitHub 
 4. Click **Add Package**.
 5. Ensure **ChatSDK** is selected and added to your **app target**. Click **Add Package** again.
 
-Xcode will fetch the `Package.swift` from the repo, download the XCFramework zip from the release URL in it, verify the checksum, and link the framework. No extra config.
+Xcode will fetch the `Package.swift` from the repo and resolve the binary (from the registry or release URL, depending on how the library is published).
 
 ### Step 2: Use the library in your UI
 
@@ -47,7 +81,7 @@ struct ContentView: View {
 
 struct ChatSheetView: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> UIViewController {
-        ChatPoc_iosKt.createBottomSheetViewController()
+        ChatPoc_iosKt.createBottomSheetViewController(config: ChatPoc_iosKt.defaultChatLibraryConfig(), callbacks: nil)
     }
 
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
@@ -64,7 +98,7 @@ import ChatSDK
 
 class ViewController: UIViewController {
     @IBAction func openChatTapped(_ sender: Any) {
-        let vc = ChatPoc_iosKt.createBottomSheetViewController()
+        let vc = ChatPoc_iosKt.createBottomSheetViewController(config: ChatPoc_iosKt.defaultChatLibraryConfig(), callbacks: nil)
         ChatPoc_iosKt.setBottomSheetDismissHandler { [weak vc] in
             vc?.dismiss(animated: true)
         }
@@ -142,9 +176,9 @@ The XCFramework is produced under `shared/build/XCFrameworks/release/` (exact na
 
 ## Usage
 
-Import the framework and call `createBottomSheetViewController()` when the user taps your button. Present that view controller modally (e.g. as a sheet).
+Import the framework and call `createBottomSheetViewController(config:callbacks:)` when the user taps your button (use `ChatPoc_iosKt.defaultChatLibraryConfig()` and `nil` for callbacks if you don’t need custom config). Present that view controller modally (e.g. as a sheet).
 
-Use the class `ChatPoc_iosKt` and its function `createBottomSheetViewController()`. (The framework exports this name from the Kotlin `ChatPoc.ios.kt` file.)
+Use the class `ChatPoc_iosKt` and its function `createBottomSheetViewController(config:callbacks:)`. For default config, use `ChatPoc_iosKt.defaultChatLibraryConfig()` and pass `nil` for callbacks. (The framework exports these from the Kotlin `ChatPoc.ios.kt` file.)
 
 ### SwiftUI
 
@@ -167,7 +201,7 @@ struct ContentView: View {
 
 struct ChatSheetView: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> UIViewController {
-        ChatPoc_iosKt.createBottomSheetViewController()
+        ChatPoc_iosKt.createBottomSheetViewController(config: ChatPoc_iosKt.defaultChatLibraryConfig(), callbacks: nil)
     }
 
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
@@ -184,7 +218,7 @@ import ChatSDK
 
 class ViewController: UIViewController {
     @IBAction func openChatTapped(_ sender: Any) {
-        let vc = ChatPoc_iosKt.createBottomSheetViewController()
+        let vc = ChatPoc_iosKt.createBottomSheetViewController(config: ChatPoc_iosKt.defaultChatLibraryConfig(), callbacks: nil)
         ChatPoc_iosKt.setBottomSheetDismissHandler { [weak vc] in
             vc?.dismiss(animated: true)
         }
