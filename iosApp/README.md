@@ -6,13 +6,13 @@ This folder describes how to add the Chat Library (ChatSDK XCFramework) to a Swi
 
 ---
 
-## Option A: Add the library from AWS CodeArtifact (Swift registry, same repo as Android)
+## Option A: Add the library from AWS CodeArtifact (Swift registry)
 
 The library is published to AWS CodeArtifact’s **Swift** registry under the same repository name used for Android (e.g. `chat-sdk-repo-dev`). Use the Swift toolchain to consume it.
 
-### Step 1: Configure Swift with CodeArtifact (one-time per machine / 12h token)
+### Step 1: Configure Swift with CodeArtifact (required once per machine; token lasts ~12 hours)
 
-In a terminal (with AWS CLI configured):
+Per [AWS Configure Swift](https://docs.aws.amazon.com/codeartifact/latest/ug/configure-swift.html): the login command must run from a directory that contains **Package.swift**. It stores the token (macOS: Keychain) and writes the registry URL to `.swiftpm/configuration/registries.json`. In a terminal (AWS CLI configured):
 
 ```bash
 aws codeartifact login --tool swift \
@@ -22,19 +22,108 @@ aws codeartifact login --tool swift \
   --region YOUR_REGION
 ```
 
-Use the **same** domain, account ID, repository name, and region as for Android. This configures the Swift Package Manager to use your CodeArtifact Swift registry.
+**Important:** Run this from a directory that contains a **Package.swift**. Otherwise Swift returns: *"Could not find Package.swift in this directory or any of its parent directories."*
 
-### Step 2: Add the package in Xcode
+**If your host app has no Package.swift** (e.g. it’s a plain Xcode project), add the following so you can run the login from the host app root and Xcode can resolve the registry from that directory:
 
-1. **File** → **Add Package Dependencies…**
-2. In the search bar, enter the package identifier: **`company.chat-sdk`** (scope: `company`, package: `chat-sdk`).
-3. Select the version you want (e.g. `1.0.0`) and add the **ChatSDK** product to your app target.
+1. **In your host app root** (same folder as your `.xcodeproj`), create **Package.swift** at that root—**not** inside a subfolder. If you add these files in Xcode, do **not** add them to your app target’s “Compile Sources” (uncheck Target Membership for Package.swift and RegistryHelper), or Xcode will try to compile the manifest and show “No such module 'PackageDescription'”.
 
-The package is resolved from the CodeArtifact Swift registry. No GitHub repo URL needed.
+**Critical:** The **first line** of `Package.swift` must be exactly `// swift-tools-version: 5.9` with **no blank lines or other text above it**. Otherwise Xcode reports: *"the manifest is backward-incompatible with Swift < 6.0 because the tools-version was specified in a subsequent line"*. Open the file and delete anything before that line.
+
+```swift
+// swift-tools-version: 5.9
+import PackageDescription
+
+let package = Package(
+    name: "HostAppRegistryHelper",
+    platforms: [.iOS(.v14)],
+    products: [],
+    dependencies: [
+        .package(id: "company.chat-sdk", from: "1.0.0"),
+    ],
+    targets: [
+        .target(name: "RegistryHelper", path: "RegistryHelper"),
+    ]
+)
+```
+
+**Why add `dependencies`?** Per [AWS Consuming Swift packages](https://docs.aws.amazon.com/codeartifact/latest/ug/swift-publish-consume.html), the package identifier (`company.chat-sdk`) and version range can be declared in Package.swift. That lets you run **`swift package resolve`** from the host app root to fetch ChatSDK from CodeArtifact and verify the registry + credentials work. Your app target is still in the `.xcodeproj`; you add the ChatSDK product to the app via Xcode (Step 2 below). Use a version range that matches what you published (e.g. `from: "1.0.0"` or `from: "1.0.19"`).
+
+2. At the **same root** (next to Package.swift), create a folder **RegistryHelper** (same directory as Package.swift) and inside it add **RegistryHelper.swift** with a single line (e.g. `import Foundation`). This satisfies SPM’s requirement for a source directory; your app still builds from the `.xcodeproj` only. If you see *invalid custom path 'RegistryHelper'*, the folder is missing or in the wrong place—it must be next to Package.swift and contain at least one .swift file.
+
+3. **From the host app root** (the directory that now contains Package.swift and RegistryHelper/), run the login (replace with your domain/repo/region):
+
+```bash
+cd /path/to/your/ios-host-app
+aws codeartifact login --tool swift \
+  --domain YOUR_DOMAIN \
+  --domain-owner YOUR_ACCOUNT_ID \
+  --repository YOUR_REPO \
+  --region YOUR_REGION
+```
+
+4. **Keep them out of the app target:** In Xcode, select **Package.swift** and the **RegistryHelper** folder/file. In the File inspector (right panel), under **Target Membership**, ensure your app target is **unchecked** for both. They must exist on disk for the login command; the app must not compile them.
+
+5. Re-run the login every ~12 hours (token expiry) from the same directory before resolving or updating packages in Xcode.
+
+**Confirm configuration** (per AWS): run `cat .swiftpm/configuration/registries.json` in the same directory; you should see your registry URL under `registries`. Use the same domain, account ID, repository name, and region as for Android.
+
+### Step 2: Add the package in Xcode (per AWS “Consuming in Xcode”)
+
+Per [AWS Consuming Swift packages](https://docs.aws.amazon.com/codeartifact/latest/ug/swift-publish-consume.html): *“Your search must be in the form package_scope.package_name”*.
+
+1. Open your app in Xcode (open the `.xcodeproj` from the same directory where you ran the login).
+2. **File** → **Add Package Dependencies…** (or **Add Packages…**).
+3. In the search bar, enter **`company.chat-sdk`** (scope: `company`, package: `chat-sdk`).
+4. When the package appears, choose it and **Add Package**.
+5. Select the **ChatSDK** product and add it to your app target; finish with **Add Package**.
 
 ### Step 3: Use the library in your UI
 
 See **Step 2** under Option B below (same code: `ChatPoc_iosKt.createBottomSheetViewController(config:callbacks:)` and `defaultChatLibraryConfig()`).
+
+### If Xcode doesn’t resolve the package (login dialog or “could not be accessed”)
+
+Xcode uses **Keychain** for registry credentials. Use Swift PM’s login with the **registry URL + `login`** and **`--token`** so credentials are stored correctly (AWS docs: append `login` to the repo URL for this step).
+
+1. **From your host app root** (directory that contains `Package.swift`), run:
+
+   ```bash
+   cd /path/to/your/ios-host-app
+
+   export CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token \
+     --domain YOUR_DOMAIN \
+     --domain-owner YOUR_ACCOUNT_ID \
+     --region YOUR_REGION \
+     --query authorizationToken --output text)
+
+   export CODEARTIFACT_REPO=$(aws codeartifact get-repository-endpoint \
+     --domain YOUR_DOMAIN \
+     --domain-owner YOUR_ACCOUNT_ID \
+     --repository YOUR_REPO \
+     --format swift \
+     --query repositoryEndpoint --output text)
+   ```
+
+2. **Store credentials in Keychain** (URL must end with `login`):
+
+   ```bash
+   swift package-registry login ${CODEARTIFACT_REPO}login --token ${CODEARTIFACT_AUTH_TOKEN}
+   ```
+
+3. **Set the registry for this project** (so packages resolve from CodeArtifact):
+
+   ```bash
+   swift package-registry set ${CODEARTIFACT_REPO}
+   ```
+
+4. **Quit Xcode**, reopen the project from this directory, then **File** → **Add Package Dependencies…** and add by **package identifier** `company.chat-sdk` (or paste the full package URL). When prompted for credentials, use **User Name:** `aws`, **Password:** a fresh token; when asked for “login keychain password”, enter your **Mac user password** so Xcode can save the credential.
+
+5. Use **Xcode 15 or later**; earlier versions had issues with registry auth from Keychain.
+
+**References:** [Configure Swift with CodeArtifact](https://docs.aws.amazon.com/codeartifact/latest/ug/configure-swift.html), [Consuming and publishing Swift packages](https://docs.aws.amazon.com/codeartifact/latest/ug/swift-publish-consume.html), [Swift troubleshooting](https://docs.aws.amazon.com/codeartifact/latest/ug/swift-troubleshooting.html).
+
+If it still fails after the steps above, you can fall back to adding the package from a **downloaded archive** (download the `.zip` for the package version from the registry with `curl -u "aws:$TOKEN"` and **Add Local…** in Xcode); the exact curl URL is `{REGISTRY_BASE}/company/chat-sdk/{VERSION}.zip` with header `Accept: application/vnd.swift.registry.v1+zip`. The unzipped folder must contain both **Package.swift** and **ChatSDK.xcframework**. If you see *"does not contain a binary artifact"*, the archive was published without the xcframework—use the xcframework from a GitHub Release (see Option B) or wait for a republish; the publish workflow has been updated to include the xcframework in the archive.
 
 ---
 

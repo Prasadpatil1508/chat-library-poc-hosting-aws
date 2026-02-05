@@ -48,6 +48,9 @@ jobs:
           echo "AWS_REGION=${{ secrets.AWS_REGION }}" >> $GITHUB_ENV
           echo "AWS_REPO=${{ secrets.AWS_REPO }}" >> $GITHUB_ENV
           echo "VERSION=$VERSION" >> $GITHUB_ENV
+          # Swift registry package identifier = SCOPE.PACKAGE (e.g. company.chat-sdk). Set via repo variables or defaults.
+          echo "SWIFT_PACKAGE_SCOPE=${{ vars.SWIFT_PACKAGE_SCOPE || 'company' }}" >> $GITHUB_ENV
+          echo "SWIFT_PACKAGE_NAME=${{ vars.SWIFT_PACKAGE_NAME || 'chat-sdk' }}" >> $GITHUB_ENV
 
       - name: Inject Connect config for remote library build
         run: |
@@ -77,12 +80,12 @@ jobs:
           XCF=$(find shared/build/XCFrameworks/release -maxdepth 1 -type d -name '*.xcframework' | head -1)
           cp -R "$XCF" ./ChatSDK.xcframework
 
-      - name: Zip XCFramework and compute checksum (GitHub Release asset)
-        run: |
-          cd shared/build/XCFrameworks/release
-          XCF=$(find . -maxdepth 1 -type d -name '*.xcframework' | head -1)
-          zip -r ChatSDK.xcframework.zip "$XCF"
-          shasum -a 256 ChatSDK.xcframework.zip | awk '{ print $1 }' > ../../../ChatSDK.xcframework.zip.sha256
+      # - name: Zip XCFramework and compute checksum (GitHub Release asset)
+      #   run: |
+      #     cd shared/build/XCFrameworks/release
+      #     XCF=$(find . -maxdepth 1 -type d -name '*.xcframework' | head -1)
+      #     zip -r ChatSDK.xcframework.zip "$XCF"
+      #     shasum -a 256 ChatSDK.xcframework.zip | awk '{ print $1 }' > ../../../ChatSDK.xcframework.zip.sha256
 
       - name: Publish iOS Swift package to AWS CodeArtifact (same repo as Android)
         run: |
@@ -92,19 +95,20 @@ jobs:
             --repository ${{ env.AWS_REPO }} \
             --region ${{ env.AWS_REGION }}
 
-          swift package archive-source
+          # Build archive with Package.swift + ChatSDK.xcframework only (swift package archive-source can omit binary targets)
+          zip -r ChatSDK.zip Package.swift ChatSDK.xcframework
 
-          SWIFT_REGISTRY_URL="https://${{ env.AWS_DOMAIN }}-${{ env.AWS_ACCOUNT_ID }}.d.codeartifact.${{ env.AWS_REGION }}.amazonaws.com/swift/${{ env.AWS_REPO }}/company/chat-sdk/${{ env.VERSION }}"
+          SWIFT_REGISTRY_URL="https://${{ env.AWS_DOMAIN }}-${{ env.AWS_ACCOUNT_ID }}.d.codeartifact.${{ env.AWS_REGION }}.amazonaws.com/swift/${{ env.AWS_REPO }}/${{ env.SWIFT_PACKAGE_SCOPE }}/${{ env.SWIFT_PACKAGE_NAME }}/${{ env.VERSION }}"
           curl -X PUT --user "aws:${{ env.CODEARTIFACT_AUTH_TOKEN }}" \
             -H "Accept: application/vnd.swift.registry.v1+json" \
             -F "source-archive=@ChatSDK.zip" \
             "$SWIFT_REGISTRY_URL"
 
-      - uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            shared/build/XCFrameworks/release/ChatSDK.xcframework.zip
-            ChatSDK.xcframework.zip.sha256
-          generate_release_notes: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - uses: softprops/action-gh-release@v2
+      #   with:
+      #     files: |
+      #       shared/build/XCFrameworks/release/ChatSDK.xcframework.zip
+      #       ChatSDK.xcframework.zip.sha256
+      #     generate_release_notes: true
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

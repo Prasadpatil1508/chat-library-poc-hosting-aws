@@ -36,6 +36,17 @@ The [publish workflow](.github/workflows/publish.yml) bakes Connect config into 
 
 Without these, the published AAR has `hasConnectConfig=false` and the host app only sees the placeholder “Hello from Chat Library” with no Connect token or chat.
 
+### Swift package scope (iOS)
+
+The publish workflow publishes the iOS Swift package to CodeArtifact with a **package identifier** = `scope.package` (e.g. `company.chat-sdk`). You can override the scope and package name via **repository variables** (Settings → Secrets and variables → Actions → Variables):
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `SWIFT_PACKAGE_SCOPE` | `company` | Scope segment in the registry URL; Xcode uses `scope.package` to resolve the package. |
+| `SWIFT_PACKAGE_NAME` | `chat-sdk` | Package name segment in the registry URL. |
+
+If you set e.g. `SWIFT_PACKAGE_SCOPE=acme` and `SWIFT_PACKAGE_NAME=chat-sdk`, the package will be published under `acme/chat-sdk` and the identifier in Xcode will be **`acme.chat-sdk`**.
+
 ## Host app
 
 The **host app** (Android or iOS) does **not** need to pass Connect config. It only uses the library (e.g. `ChatPoc.showBottomSheet(activity, config, callbacks)` or `createBottomSheetViewController()`). The library makes the start-chat API call using its own config.
