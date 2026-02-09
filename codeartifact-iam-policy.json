@@ -1,0 +1,33 @@
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Effect": "Allow",
+			"Action": [
+				"codeartifact:GetAuthorizationToken",
+				"codeartifact:GetRepositoryEndpoint",
+				"codeartifact:ReadFromRepository",
+				"codeartifact:PublishPackageVersion",
+				"codeartifact:PutPackageMetadata",
+				"codeartifact:DescribeDomain",
+				"codeartifact:DescribeRepository",
+				"codeartifact:DescribePackageVersion",
+				"codeartifact:ListPackages",
+				"codeartifact:ListPackageVersions",
+				"codeartifact:GetPackageVersionAsset",
+				"codeartifact:GetPackageVersionReadme"
+			],
+			"Resource": "*"
+		},
+		{
+			"Effect": "Allow",
+			"Action": "sts:GetServiceBearerToken",
+			"Resource": "*",
+			"Condition": {
+				"StringEquals": {
+					"sts:AWSServiceName": "codeartifact.amazonaws.com"
+				}
+			}
+		}
+	]
+}

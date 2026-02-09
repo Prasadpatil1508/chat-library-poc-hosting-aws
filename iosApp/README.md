@@ -64,6 +64,8 @@ aws codeartifact login --tool swift \
 
 4. **Keep them out of the app target:** In Xcode, select **Package.swift** and the **RegistryHelper** folder/file. In the File inspector (right panel), under **Target Membership**, ensure your app target is **unchecked** for both. They must exist on disk for the login command; the app must not compile them.
 
+   **If you see “No such module 'PackageDescription'”:** Xcode is compiling `Package.swift` as app source. Select **Package.swift** in the Project Navigator → **File** inspector (right panel) → **Target Membership** → **uncheck** your app target. Do the same for **RegistryHelper** and **RegistryHelper.swift**. Then open your **app target** → **Build Phases** → **Compile Sources** and remove **Package.swift** and **RegistryHelper.swift** if they are listed (select and click **−**).
+
 5. Re-run the login every ~12 hours (token expiry) from the same directory before resolving or updating packages in Xcode.
 
 **Confirm configuration** (per AWS): run `cat .swiftpm/configuration/registries.json` in the same directory; you should see your registry URL under `registries`. Use the same domain, account ID, repository name, and region as for Android.
