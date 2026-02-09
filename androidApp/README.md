@@ -2,6 +2,8 @@
 
 This folder describes how to add the Chat Library to an Android app and show the bottom sheet when the user taps a button.
 
+**Hosting:** Both **Android** and **iOS** are published on **GitHub** (Android → GitHub Packages Maven, iOS → GitHub Releases XCFramework). Use the steps below to add the library from GitHub.
+
 ## Test locally (Maven Local) — quickest way
 
 Publish the library to your local Maven repository (`~/.m2/repository`) and add it to your Android app.
@@ -56,13 +58,13 @@ Use the version from the library's `build.gradle.kts` (default is `1.0.0`, or se
 
 ---
 
-## Add the library from GitHub (for production)
+## Add the library from GitHub Packages (production)
 
-If the library is published to **GitHub Packages** from this repo, add it as a Maven dependency.
+The library is published to **GitHub Packages** (Maven) from this repo. Add it as a Maven dependency.
 
 ### 1. Add the GitHub Packages repository
 
-In your app’s **root** `settings.gradle.kts` (or where `dependencyResolutionManagement` is defined), add the GitHub Packages Maven URL. Replace `YOUR_GITHUB_OWNER` with the GitHub user or org that hosts the repo (e.g. `getitrent`):
+In your app’s **root** `settings.gradle.kts` (or where `dependencyResolutionManagement` is defined), add the GitHub Packages Maven URL. Replace `YOUR_GITHUB_OWNER` and repo name if different (e.g. `Prasadpatil1508/chat-library-poc-hosting-aws`):
 
 ```kotlin
 dependencyResolutionManagement {
@@ -70,7 +72,7 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         maven {
-            url = uri("https://maven.pkg.github.com/YOUR_GITHUB_OWNER/chat-library-poc")
+            url = uri("https://maven.pkg.github.com/YOUR_GITHUB_OWNER/chat-library-poc-hosting-aws")
             credentials {
                 username = providers.gradleProperty("gpr.user").getOrElse(System.getenv("GITHUB_ACTOR") ?: "")
                 password = providers.gradleProperty("gpr.token").getOrElse(System.getenv("GITHUB_TOKEN") ?: "")
@@ -87,7 +89,7 @@ repositories {
     google()
     mavenCentral()
     maven {
-        url = uri("https://maven.pkg.github.com/YOUR_GITHUB_OWNER/chat-library-poc")
+        url = uri("https://maven.pkg.github.com/YOUR_GITHUB_OWNER/chat-library-poc-hosting-aws-hosting-aws")
         credentials {
             username = project.findProperty("gpr.user")?.toString() ?: System.getenv("GITHUB_ACTOR") ?: ""
             password = project.findProperty("gpr.token")?.toString() ?: System.getenv("GITHUB_TOKEN") ?: ""
@@ -123,9 +125,9 @@ gpr.token=YOUR_GITHUB_PERSONAL_ACCESS_TOKEN
 
 ---
 
-## Add the library from AWS CodeArtifact (step-by-step)
+## Add the library from AWS CodeArtifact (optional)
 
-If the library is published to **AWS CodeArtifact** (Maven), add it to your Android app as follows.
+If you use an **AWS CodeArtifact** mirror or legacy setup, add it to your Android app as follows.
 
 ### Step 1: Get your CodeArtifact Maven URL
 

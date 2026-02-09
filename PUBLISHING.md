@@ -19,9 +19,9 @@ After you publish, here’s where it appears and how consumers use it:
 
 ### Android (GitHub Packages)
 
-- **In the GitHub UI:** Your repo → **Packages** (right-hand side, or `https://github.com/orgs/YOUR_ORG/packages` / `https://github.com/YOUR_USER?tab=packages`). The package name is the **repository name** (e.g. `chat-library-poc`).
+- **In the GitHub UI:** Your repo → **Packages** (right-hand side, or `https://github.com/orgs/YOUR_ORG/packages` / `https://github.com/YOUR_USER?tab=packages`). The package name is the **repository name** (e.g. `chat-library-poc-hosting-aws`).
 - **Maven URL consumers use:**  
-  `https://maven.pkg.github.com/YOUR_GITHUB_OWNER/chat-library-poc`
+  `https://maven.pkg.github.com/YOUR_GITHUB_OWNER/chat-library-poc-hosting-aws`
 - **Dependency coordinates:**  
   `com.example.chat_poc:shared:VERSION`  
   (e.g. `com.example.chat_poc:shared:1.0.0`).
@@ -30,17 +30,17 @@ After you publish, here’s where it appears and how consumers use it:
 
 - **In the GitHub UI:** Your repo → **Releases** → choose a release (e.g. `v1.0.0`) → **Assets**. The XCFramework zip (e.g. `ChatSDK.xcframework.zip`) is listed there.
 - **Direct download URL (for docs or SPM):**  
-  `https://github.com/YOUR_GITHUB_OWNER/chat-library-poc/releases/download/v1.0.0/ChatSDK.xcframework.zip`  
+  `https://github.com/YOUR_GITHUB_OWNER/chat-library-poc-hosting-aws/releases/download/v1.0.0/ChatSDK.xcframework.zip`  
   (replace `v1.0.0` with the release tag).
 
 ### Quick links (replace `YOUR_GITHUB_OWNER`)
 
 | What | URL |
 |------|-----|
-| **Android – Maven repo** | `https://maven.pkg.github.com/YOUR_GITHUB_OWNER/chat-library-poc` |
+| **Android – Maven repo** | `https://maven.pkg.github.com/YOUR_GITHUB_OWNER/chat-library-poc-hosting-aws` |
 | **Android – view package in GitHub** | Repo page → **Packages** (right sidebar), or **Your profile** → **Packages** |
-| **iOS – releases** | `https://github.com/YOUR_GITHUB_OWNER/chat-library-poc/releases` |
-| **iOS – zip for tag v1.0.0** | `https://github.com/YOUR_GITHUB_OWNER/chat-library-poc/releases/download/v1.0.0/ChatSDK.xcframework.zip` |
+| **iOS – releases** | `https://github.com/YOUR_GITHUB_OWNER/chat-library-poc-hosting-aws/releases` |
+| **iOS – zip for tag v1.0.0** | `https://github.com/YOUR_GITHUB_OWNER/chat-library-poc-hosting-aws/releases/download/v1.0.0/ChatSDK.xcframework.zip` |
 
 ---
 
@@ -55,7 +55,7 @@ After you publish, here’s where it appears and how consumers use it:
 
 2. **Repository URL**
    - Replace `YOUR_GITHUB_OWNER` in the publish URL with your GitHub username or org.
-   - Default URL in the project: `https://maven.pkg.github.com/YOUR_GITHUB_OWNER/chat-library-poc`
+   - Default URL in the project: `https://maven.pkg.github.com/YOUR_GITHUB_OWNER/chat-library-poc-hosting-aws`
    - Or set it via property: `-PGITHUB_PACKAGES_URL=https://maven.pkg.github.com/OWNER/REPO`
 
 ### 1.2 Publish from your machine
@@ -94,35 +94,9 @@ Stale Kotlin/Native metadata is in the build. Clean and publish again:
 
 The project uses Kotlin 2.1.0; if you previously built with another Kotlin version, a full clean removes the old klibs.
 
-### 1.3 Publish via GitHub Actions (on release)
+### 1.3 Publish via GitHub Actions (on tag push)
 
-A workflow can run publish when you create a GitHub Release. Example in `.github/workflows/publish.yml`:
-
-```yaml
-name: Publish
-on:
-  release:
-    types: [published]
-jobs:
-  publish-android:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-      - name: Publish to GitHub Packages
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          ./gradlew :shared:publishAllPublicationsToGitHubPackagesRepository \
-            -Pgpr.user=${{ github.repository_owner }} \
-            -Pgpr.token=${{ secrets.GITHUB_TOKEN }} \
-            -PLIB_VERSION=${GITHUB_REF#refs/tags/}
-```
-
-Create a release (e.g. tag `v1.0.0`) and the workflow will publish.
+The workflow in `.github/workflows/publish.yml` runs on **push** of a tag `v*` (e.g. `v1.0.0`). It publishes Android to GitHub Packages and the iOS XCFramework to a GitHub Release. No extra publish step is needed; push a tag and the workflow runs. The built-in `GITHUB_TOKEN` is used for both GitHub Packages and the release (no AWS or PAT required).
 
 ### 1.4 Adding the library in an Android app (from GitHub Packages)
 
@@ -137,7 +111,7 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         maven {
-            url = uri("https://maven.pkg.github.com/YOUR_GITHUB_OWNER/chat-library-poc")
+            url = uri("https://maven.pkg.github.com/YOUR_GITHUB_OWNER/chat-library-poc-hosting-aws")
             credentials {
                 username = providers.gradleProperty("gpr.user").getOrElse(System.getenv("GITHUB_ACTOR") ?: "")
                 password = providers.gradleProperty("gpr.token").getOrElse(System.getenv("GITHUB_TOKEN") ?: "")
@@ -196,20 +170,20 @@ Output: `shared/build/XCFrameworks/release/` (contains the framework, e.g. `Chat
 
 3. **Stable download URL**
    - Use the “Attached binary” URL, e.g.:
-   - `https://github.com/YOUR_GITHUB_OWNER/chat-library-poc/releases/download/v1.0.0/ChatSDK.xcframework.zip`
+   - `https://github.com/YOUR_GITHUB_OWNER/chat-library-poc-hosting-aws/releases/download/v1.0.0/ChatSDK.xcframework.zip`
 
 ### 2.3 Adding the library in an iOS app
 
 **Option A – Swift Package Manager (XCFramework from URL)**
 
 1. In Xcode: File → Add Package Dependencies
-2. Enter the repo URL: `https://github.com/YOUR_GITHUB_OWNER/chat-library-poc`
+2. Enter the repo URL: `https://github.com/YOUR_GITHUB_OWNER/chat-library-poc-hosting-aws`
 3. If the repo has a `Package.swift` that points at the XCFramework zip URL, Xcode will use it. Otherwise use Option B.
 
 **Option B – Manual XCFramework**
 
 1. Download the zip from the release, e.g.  
-   `https://github.com/YOUR_GITHUB_OWNER/chat-library-poc/releases/download/v1.0.0/ChatSDK.xcframework.zip`
+   `https://github.com/YOUR_GITHUB_OWNER/chat-library-poc-hosting-aws/releases/download/v1.0.0/ChatSDK.xcframework.zip`
 2. Unzip and add `ChatSDK.xcframework` to the app target (Frameworks, Libraries, and Embedded Content → Embed & Sign).
 3. **Usage**  
    See [iosApp/README.md](iosApp/README.md) for `createBottomSheetViewController()` and `setBottomSheetDismissHandler`.
@@ -229,14 +203,14 @@ let package = Package(
     targets: [
         .binaryTarget(
             name: "ChatSDK",
-            url: "https://github.com/YOUR_GITHUB_OWNER/chat-library-poc/releases/download/v1.0.0/ChatSDK.xcframework.zip",
+            url: "https://github.com/YOUR_GITHUB_OWNER/chat-library-poc-hosting-aws/releases/download/v1.0.0/ChatSDK.xcframework.zip",
             checksum: "…"  // run: swift package compute-checksum ChatSDK.xcframework.zip
         ),
     ]
 )
 ```
 
-Then in Xcode: Add Package Dependencies → `https://github.com/YOUR_GITHUB_OWNER/chat-library-poc`.
+Then in Xcode: Add Package Dependencies → `https://github.com/YOUR_GITHUB_OWNER/chat-library-poc-hosting-aws`.
 
 ---
 
@@ -251,7 +225,7 @@ Replace `YOUR_GITHUB_OWNER` (and repo name if different) everywhere with your ac
 
 ## 4. Testing the hosted publish (from this repo, no local build)
 
-Use this flow to test the **hosted** pipeline: push code → configure secrets → push a tag → workflow publishes to **AWS CodeArtifact** and creates a **GitHub Release** with the XCFramework. No local Gradle or Xcode build required.
+Use this flow to test the **hosted** pipeline: push code → configure secrets → push a tag → workflow publishes **Android** to **GitHub Packages** and creates a **GitHub Release** with the iOS XCFramework. No local Gradle or Xcode build required.
 
 ### Step 1: Push your code
 
@@ -260,26 +234,24 @@ From the repo root:
 ```bash
 git add .
 git status   # confirm .github/workflows/publish.yml, shared/build.gradle.kts, Package.swift, etc.
-git commit -m "Add publish workflow: CodeArtifact + GitHub Release"
-git push origin feature   # or main / your branch name
+git commit -m "Publish workflow: GitHub Packages + GitHub Release"
+git push origin main   # or your branch name
 ```
 
-Ensure the branch you push is the one you use for releases (e.g. `main` or `feature`). The tag you push in Step 4 can be on any commit on the remote.
+The tag you push in Step 3 can be on any commit on the remote.
 
 ### Step 2: Configure GitHub secrets
 
-In **this repo on GitHub**: **Settings → Secrets and variables → Actions → New repository secret**. Add:
+In **this repo on GitHub**: **Settings → Secrets and variables → Actions**. The workflow uses the built-in **GITHUB_TOKEN** (no extra secret) for publishing to GitHub Packages and creating the release. For Connect config (start-chat API), add these **repository secrets** if the library needs them at build time:
 
 | Secret | Description |
 |--------|-------------|
-| `AWS_ACCESS_KEY_ID` | IAM user access key (needs `codeartifact:GetAuthorizationToken` and publish rights to the repo). |
-| `AWS_SECRET_ACCESS_KEY` | IAM user secret key. |
-| `AWS_REGION` | e.g. `us-east-1`. |
-| `AWS_ACCOUNT_ID` | Your AWS account ID (CodeArtifact domain owner). |
-| `AWS_DOMAIN` | CodeArtifact domain name. |
-| `AWS_REPO` | CodeArtifact Maven repository name. |
+| `API_GATEWAY` | Full start-chat API URL (see [ENV.md](ENV.md)). |
+| `CONTACT_FLOW_ID` | Amazon Connect contact flow ID. |
+| `INSTANCE_ID` | Connect instance ID. |
+| `REGION` | AWS region (e.g. `ca-central-1`). |
 
-The workflow uses the built-in `GITHUB_TOKEN` for creating the release; no extra secret for that.
+Without these, the published library has no Connect config; host apps still get the chat UI.
 
 ### Step 3: Trigger the workflow with a tag
 
@@ -293,18 +265,24 @@ git push origin v1.0.0
 ### Step 4: Check the hosted result
 
 1. **Actions:** In this repo, open **Actions** → select the **Publish** run for the tag (e.g. `v1.0.0`). Confirm all steps succeed.
-2. **CodeArtifact:** In AWS Console → CodeArtifact → your domain → your Maven repo. You should see `com.example.chat_poc:shared:1.0.0` (or the version from the tag).
+2. **GitHub Packages:** In this repo → **Packages** (right sidebar). You should see the Maven package (e.g. `chat-library-poc-hosting-aws-hosting-aws` or the repo name) with version `1.0.0`.
 3. **GitHub Release:** In this repo → **Releases**. There should be a release for `v1.0.0` with assets:
    - `ChatSDK.xcframework.zip`
    - `ChatSDK.xcframework.zip.sha256`
 
-That’s the hosted test: Android/Common from CodeArtifact, iOS from the release zip.
+That’s the hosted test: **Android** from GitHub Packages, **iOS** from the release zip.
 
 ### Step 5: After the first successful run
 
-- **Package.swift:** In this repo, replace `YOUR_ORG` and `YOUR_REPO` in the binary URL with your GitHub org/repo, set the tag in the URL (e.g. `v1.0.0`), and set `checksum` to the value inside the release’s `ChatSDK.xcframework.zip.sha256` (or from `swift package compute-checksum` on the downloaded zip). Then commit and push so SPM consumers can use the package.
-- **Consumers:** Android apps add your CodeArtifact Maven repo and `implementation("com.example.chat_poc:shared:1.0.0")`; iOS apps use the release zip URL or add this repo as an SPM dependency.
+- **Package.swift:** In this repo, set the tag in the binary URL (e.g. `v1.0.0`) and set `checksum` to the value in the release’s `ChatSDK.xcframework.zip.sha256` (or run `swift package compute-checksum` on the downloaded zip). Commit and push so SPM consumers can use the package.
+- **Consumers:** Android apps add the GitHub Packages Maven repo and `implementation("com.example.chat_poc:shared:1.0.0")`; iOS apps add this repo as an SPM dependency or use the release zip URL.
 
 ### Optional: local dry-run (no tag, no GitHub)
 
-If you ever want to run the same publish and XCFramework steps on your machine: set `CODEARTIFACT_AUTH_TOKEN`, `AWS_DOMAIN`, `AWS_ACCOUNT_ID`, `AWS_REGION`, `AWS_REPO`, then run `./gradlew publishAllPublicationsToAWSCodeArtifactRepository -PLIB_VERSION=1.0.0` and `./gradlew :shared:assembleSharedReleaseXCFramework` (see older docs or workflow steps for exact commands).
+To publish Android to GitHub Packages from your machine: set `GITHUB_ACTOR` (your GitHub username), `GITHUB_TOKEN` (PAT with `write:packages`), and `GITHUB_REPOSITORY` (e.g. `owner/repo`), then run:
+
+```bash
+./gradlew :shared:publishAndroidPublicationToGitHubPackagesRepository -PLIB_VERSION=1.0.0
+```
+
+For iOS: `./gradlew :shared:assembleSharedReleaseXCFramework`, then zip the XCFramework and create a release manually or push a tag to trigger the workflow.

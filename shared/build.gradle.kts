@@ -181,22 +181,14 @@ publishing {
         // Local testing
         mavenLocal()
 
-        // AWS CodeArtifact
+        // GitHub Packages (Android library)
         maven {
-            name = "AWSCodeArtifact"
-
-            val domain = System.getenv("AWS_DOMAIN") ?: ""
-            val accountId = System.getenv("AWS_ACCOUNT_ID") ?: ""
-            val region = System.getenv("AWS_REGION") ?: ""
-            val repo = System.getenv("AWS_REPO") ?: ""
-
-            url = uri(
-                "https://${domain}-${accountId}.d.codeartifact.${region}.amazonaws.com/maven/${repo}/"
-            )
-
+            name = "GitHubPackages"
+            val repo = System.getenv("GITHUB_REPOSITORY") ?: "Prasadpatil1508/chat-library-poc-hosting-aws"
+            url = uri("https://maven.pkg.github.com/$repo")
             credentials {
-                username = "aws"
-                password = System.getenv("CODEARTIFACT_AUTH_TOKEN") ?: ""
+                username = System.getenv("GITHUB_ACTOR") ?: ""
+                password = System.getenv("GITHUB_TOKEN") ?: ""
             }
         }
     }

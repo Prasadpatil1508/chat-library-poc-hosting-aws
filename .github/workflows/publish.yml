@@ -5,6 +5,10 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: write   # create GitHub Release and upload assets
+  packages: write  # publish Android library to GitHub Packages (Maven)
+
 jobs:
   publish:
     runs-on: macos-latest
@@ -22,31 +26,6 @@ jobs:
           java-version: 17
           cache: gradle
 
-      - uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
-
-      - name: Configure Gradle TLS
-        run: |
-          echo "org.gradle.jvmargs=-Dhttps.protocols=TLSv1.2,TLSv1.3 -Djdk.tls.client.protocols=TLSv1.2" >> gradle.properties
-
-      - name: Get CodeArtifact auth token
-        run: |
-          TOKEN=$(aws codeartifact get-authorization-token \
-            --domain ${{ secrets.AWS_DOMAIN }} \
-            --domain-owner ${{ secrets.AWS_ACCOUNT_ID }} \
-            --region ${{ secrets.AWS_REGION }} \
-            --query authorizationToken \
-            --output text)
-
-          echo "CODEARTIFACT_AUTH_TOKEN=$TOKEN" >> $GITHUB_ENV
-          echo "AWS_DOMAIN=${{ secrets.AWS_DOMAIN }}" >> $GITHUB_ENV
-          echo "AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID }}" >> $GITHUB_ENV
-          echo "AWS_REGION=${{ secrets.AWS_REGION }}" >> $GITHUB_ENV
-          echo "AWS_REPO=${{ secrets.AWS_REPO }}" >> $GITHUB_ENV
-
       - name: Inject Connect config for remote library build
         run: |
           echo "API_GATEWAY=${{ secrets.API_GATEWAY }}" >> local.properties
@@ -54,17 +33,18 @@ jobs:
           echo "INSTANCE_ID=${{ secrets.INSTANCE_ID }}" >> local.properties
           echo "REGION=${{ secrets.REGION }}" >> local.properties
 
-      - name: Publish Android library to AWS CodeArtifact
+      - name: Publish Android library to GitHub Packages
         run: |
           chmod +x gradlew
           VERSION="${GITHUB_REF#refs/tags/v}"
-
           ./gradlew clean \
             :shared:generateConnectConfig \
-            :shared:publishAndroidPublicationToAWSCodeArtifactRepository \
+            :shared:publishAndroidPublicationToGitHubPackagesRepository \
             -PLIB_VERSION="$VERSION" \
             --no-daemon \
             --no-configuration-cache
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Assemble XCFramework
         run: |
@@ -83,7 +63,7 @@ jobs:
         with:
           files: |
             shared/build/XCFrameworks/release/ChatSDK.xcframework.zip
-            ChatSDK.xcframework.zip.sha256
+            shared/build/ChatSDK.xcframework.zip.sha256
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
